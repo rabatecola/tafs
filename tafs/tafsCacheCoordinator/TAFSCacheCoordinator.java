@@ -26,11 +26,9 @@ public class TAFSCacheCoordinator
 	public static void main(String[] args) throws InterruptedException
 	{
 		TAFSCatalog			myCat = new TAFSCatalog();
-		ServerSocket		myServerSocket;
 		Socket				mySocket;
 		long				tempCounter = 0;
-//		TAFSCCMsgHandler	aMsgHandler;
-		TAFSCommHandler		aCommHandler = new TAFSCommHandler();
+		TAFSCommHandler		aCommHandler = new TAFSCommHandler(4321);
 
 		System.out.println("Entered " + TAFSCacheCoordinator.class.getSimpleName());
 
@@ -40,8 +38,7 @@ public class TAFSCacheCoordinator
 			System.out.print(TAFSCacheCoordinator.class.getSimpleName() + "(" + tempCounter + "): Waiting for message...");
 			Thread.sleep(1000);
 			System.out.println();
-			// To-do - consider changing Listen to take a number instead of a string for port.
-			mySocket = aCommHandler.Listen("", "4321");
+			mySocket = aCommHandler.Listen();
 
 			// Spin off thread to handle message
 			System.out.println(TAFSCacheCoordinator.class.getSimpleName() + ": Received message, executing thread.");
