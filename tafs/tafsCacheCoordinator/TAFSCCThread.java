@@ -8,7 +8,9 @@ import java.net.Socket;
 import pre_dev.TAFSMessageListener;
 import tafs.TAFSCatalog;
 import tafs.TAFSCommands;
+import tafsComm.TAFSCommHandler;
 import tafsComm.TAFSMessage;
+import tafsComm.TAFSMessageHandler;
 
 /**
  * @author Robert Abatecola
@@ -16,13 +18,13 @@ import tafsComm.TAFSMessage;
  */
 public class TAFSCCThread implements Runnable
 {
-	Socket		mySocket;
-	TAFSCatalog	myCatalog;
-	String		myMsg;
+	TAFSCommHandler	myCH;
+	TAFSCatalog		myCatalog;
+	String			myMsg;
 
-	public TAFSCCThread(Socket inSocket, TAFSCatalog inCatalog, String inMsg)
+	public TAFSCCThread(TAFSCommHandler inCH, TAFSCatalog inCatalog, String inMsg)
 	{
-		mySocket = inSocket;
+		myCH = inCH;
 		myCatalog = inCatalog;
 		myMsg = inMsg;
 
@@ -32,15 +34,15 @@ public class TAFSCCThread implements Runnable
 
 	public void run()
 	{
-		TAFSMessageListener	aML;
+		TAFSMessageHandler	aMH;
 		TAFSMessage			aMsg;
 		String				dummyMsg = "";
 		TAFSCommands		aCmd;
 
 		try
 		{
-			aML = new TAFSMessageListener(mySocket);
-			aMsg = aML.ReadMessage();
+			aMH = new TAFSMessageHandler(myCH);
+			aMsg = aMH.ReadMessage();
 
 			//dummyMsg = aMsg.myMsg;
 			aCmd = TAFSCommands.valueOf(dummyMsg.toLowerCase());

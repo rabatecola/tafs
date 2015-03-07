@@ -6,13 +6,15 @@ package tafs;
 
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.BufferedOutputStream;
-
 import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+
+import tafsComm.TAFSMessage;
 
 public class testClient
 {
@@ -72,7 +74,17 @@ public static void main(String[] args) throws FileNotFoundException, IOException
 			socket = new Socket(host, 4444);
 
 			out = new BufferedOutputStream(socket.getOutputStream());
-			out.write(fileByteArray, 0, fileByteArray.length);
+
+			ObjectOutputStream	oos = new ObjectOutputStream(out);
+//			TAFSMessage			aMsg = new TAFSMessage();
+			testClass			aMsg = new testClass("Robert", "Second STRING", 42);
+			aMsg.myPayload = fileByteArray;
+			oos.writeObject(aMsg);
+			oos.flush();
+			oos.close();
+
+//			out.write(fileByteArray, 0, fileByteArray.length);
+
 		}
 		catch(UnknownHostException eUH)
 		{
