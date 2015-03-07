@@ -3,6 +3,7 @@
  */
 package tafsComm;
 
+import java.io.Serializable;
 import java.net.Socket;
 
 /**
@@ -11,16 +12,38 @@ import java.net.Socket;
  */
 public class TAFSCommHandler
 {
-	public Socket Listen(String inIPAddress, String inPortNumber)
+	Integer	myPortNumber;
+	Socket	mySocket;
+
+	public TAFSCommHandler(Integer inPortNumber)
 	{
+		myPortNumber = inPortNumber;
+	}
+
+	public Socket Listen()
+	{
+		// Use ServerSocket to listen for incoming connection
 		return null;
 	}
 
-	public void SendMessage(String inMsg, String[] inArgs, byte[] inPayload)
+	public Socket Open(String inIPAddr)
+	{
+		// Use Socket to create an outgoing connection
+		return null;
+	}
+
+	public void Close()
 	{
 	}
 
-	public void SendMessage(TAFSMessage inMsg)
+	public Serializable ReadObject()
 	{
+		// Read a serialized object from the open socket
+		return null;
+	}
+
+	public void WriteObject(Serializable inObject)
+	{
+		// Write a serializable object to the open socket
 	}
 }

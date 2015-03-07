@@ -17,3 +17,9 @@ run: testmemcached.class
 
 clean:
 	rm $(OBJECTS)
+
+runclient:
+	java -cp /Users/robert/Desktop/SCU/gitRepositories/Winter\ 2015/tafs:/Users/robert/Desktop/SCU/gitRepositories/Winter\ 2015/tafs/spymemcached-2.10.3.jar tafs.testClient
+
+runserver:
+	java -cp /Users/robert/Desktop/SCU/gitRepositories/Winter\ 2015/tafs:/Users/robert/Desktop/SCU/gitRepositories/Winter\ 2015/tafs/spymemcached-2.10.3.jar tafs.testServer
