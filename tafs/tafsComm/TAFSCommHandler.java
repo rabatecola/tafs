@@ -12,17 +12,23 @@ import java.net.Socket;
  */
 public class TAFSCommHandler
 {
-	Integer	myPortNumber;
-	Socket	mySocket;
+	private Integer	myPortNumber;
+	private Socket	mySocket;
 
 	public TAFSCommHandler(Integer inPortNumber)
 	{
 		myPortNumber = inPortNumber;
 	}
 
-	public Socket Listen()
+	public void SetSocket(Socket inSocket)
 	{
-		// Use ServerSocket to listen for incoming connection
+		mySocket = inSocket;
+	}
+
+	public TAFSCommHandler Listen()
+	{
+		// Use ServerSocket to listen for incoming connection.
+		// Return a new comm. handler with the open socket.
 		return null;
 	}
 
