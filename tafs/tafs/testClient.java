@@ -12,7 +12,6 @@ import java.net.UnknownHostException;
 import java.io.BufferedOutputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
-import java.util.logging.Level;
 
 import tafsComm.TAFSMessage;
 
@@ -40,10 +39,10 @@ public static void main(String[] args) throws FileNotFoundException, IOException
 	systemProperties.put("net.spy.log.LoggerImpl", "net.spy.memcached.compat.log.SunLogger");
 	System.setProperties(systemProperties);
 
-	Logger.getLogger("net.spy.memcached").setLevel(Level.FINEST);
+	Logger.getLogger("net.spy.memcached").setLevel(TAFSGlobalConfig.memcachedlogLevel);
 //	Logger.getLogger("net.spy.memcached").setLevel(Level.WARNING);
 
-	myTAFSFile = new TAFSFile(fileName, "127.0.0.1:11211,127.0.0.1:11212");
+	myTAFSFile = new TAFSFile(fileName, TAFSGlobalConfig.cacheServers);
 
 	try
 	{

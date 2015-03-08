@@ -11,11 +11,15 @@ import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.logging.Logger;
 
 import tafscache.TAFSCache_SMCD;
 
 public class TAFSFile
 {
+	private final static String	className = TAFSFile.class.getSimpleName();
+	private final static Logger log = Logger.getLogger(className);
+
 	private byte[]					writeByteArray = null;
 	private String					fileName = "";
 	private BufferedOutputStream	bos = null;
@@ -60,9 +64,9 @@ public class TAFSFile
 
 			fileByteArray = myCache.GetFileFromCache(fileName);
 			if (fileByteArray != null)
-				System.out.println("Cache HIT: file found in cache.");
+				log.info("Cache HIT: file found in cache.");
 			else
-				System.out.println("Cache MISS: file not found in cache.  Reading it into memory.");
+				log.info("Cache MISS: file not found in cache.  Reading it into memory.");
 		}
 
 		if (fileByteArray == null)
@@ -95,17 +99,19 @@ public class TAFSFile
 			length = file.length();
 			if (length > Integer.MAX_VALUE)
 			{
-				System.out.println("\tFile is too large.");
+				log.severe("\tFile is too large.");
 			}
-
-			fis = new FileInputStream(file);
-			bis = new BufferedInputStream(fis);
-			fileByteArray = new byte[(int)length];
-
-			count = bis.read(fileByteArray);
-			if (count == -1 || count == length)
+			else
 			{
-				System.out.println("\tFile read to end: " + fileName);
+				fis = new FileInputStream(file);
+				bis = new BufferedInputStream(fis);
+				fileByteArray = new byte[(int)length];
+	
+				count = bis.read(fileByteArray);
+				if (count == -1 || count == length)
+				{
+					log.info("\tFile read to end: " + fileName);
+				}
 			}
 		}
 //		catch(FileNotFoundException e)

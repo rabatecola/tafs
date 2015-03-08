@@ -1,47 +1,34 @@
 /**
  * Waits for incoming communication (via TAFSCommHandler) and starts up
- * TAFSCCThread threads to handle each connection
+ * TAFSCHThread threads to handle each connection
  */
-package tafsCacheCoordinator;
+package tafsCacheHandler;
 
-//import java.io.IOException;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.logging.Logger;
 
-import tafs.TAFSCatalog;
 import tafs.TAFSGlobalConfig;
 import tafsComm.TAFSCommHandler;
 
 /**
- * @author Robert Abatecola
+ * @author robert
  *
  */
-public class TAFSCacheCoordinator
+public class TAFSCacheHandler
 {
-	private final static String	className = TAFSCacheCoordinator.class.getSimpleName();
+	private final static String	className = TAFSCacheHandler.class.getSimpleName();
 	private final static Logger log = Logger.getLogger(className);
 
-//	public TAFSCacheCoordinator()
+	//	public TAFSCacheHandler()
 //	{
 //	}
 
-	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException
+	public static void main(String[] args) throws InterruptedException
 	{
-		TAFSCatalog		myCat = new TAFSCatalog();
 		long			tempCounter = 0;
 		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.listenPort);
 		TAFSCommHandler	threadCH;
 
-		TAFSGlobalConfig.SetLoggingLevel("");
-
 		log.info("Entered " + className);
-
-		// Load the catalog from disk.
-		myCat.LoadEntriesFromFile(TAFSGlobalConfig.catalogFile);
-		myCat.DisplayEntries();
-		log.info("Loaded from catalog file '" + TAFSGlobalConfig.catalogFile + "'");
 
 		while (true)
 		{
@@ -49,13 +36,12 @@ public class TAFSCacheCoordinator
 			log.info(className + "(" + tempCounter + "): Waiting for message...");
 			// Temp sleep until comm handler is written
 			Thread.sleep(1000);
-			System.out.println();
 			threadCH = aCommHandler.Listen();
 
 			// Spin off thread to handle message
 			log.info(className + ": Received message, executing thread.");
 
-			new TAFSCCThread(threadCH, myCat, "Thread for loop #" + tempCounter);
+			new TAFSCHThread(threadCH, "Thread for loop #" + tempCounter);
 
 			tempCounter++;
 			if (tempCounter >= 10)

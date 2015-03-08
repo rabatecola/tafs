@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class TAFSCatalog
 {
-	Map<String,String>	fileCatalog = new HashMap<String,String>();
+	private Map<String,String>	fileCatalog = new HashMap<String,String>();
 
 //	public static void main(String[] args) throws IOException
 //	{
@@ -111,6 +111,18 @@ public class TAFSCatalog
 		finally
 		{
 			myBR.close();
+		}
+	}
+
+	public void DisplayEntries()
+	{
+		for (String key : fileCatalog.keySet())
+		{
+			// Get the String value that goes with the key
+			String value = fileCatalog.get(key);
+
+			// Print the key and value
+			System.out.println(key + "\t" + value);
 		}
 	}
 }

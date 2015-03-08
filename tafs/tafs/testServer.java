@@ -9,7 +9,6 @@ import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.InputStream;
 
@@ -35,9 +34,8 @@ public class testServer
 		systemProperties.put("net.spy.log.LoggerImpl", "net.spy.memcached.compat.log.SunLogger");
 		System.setProperties(systemProperties);
 
-		Logger.getLogger("net.spy.memcached").setLevel(Level.FINEST);
+		Logger.getLogger("net.spy.memcached").setLevel(TAFSGlobalConfig.memcachedlogLevel);
 //		Logger.getLogger("net.spy.memcached").setLevel(Level.OFF);
-//		Logger.getLogger("net.spy.memcached").setLevel(Level.WARNING);
 
 		try
 		{
@@ -77,7 +75,7 @@ public class testServer
 			System.out.println("Can't get socket input stream. ");
 		}
 
-		myTAFSFile = new TAFSFile("spymemcached-2.10.3-javadoc.jar_COPIED", "127.0.0.1:11211,127.0.0.1:11212");
+		myTAFSFile = new TAFSFile("spymemcached-2.10.3-javadoc.jar_COPIED", TAFSGlobalConfig.cacheServers);
 		myTAFSFile.SetCacheWrites(true);
 		myTAFSFile.OpenForWriting();
 
