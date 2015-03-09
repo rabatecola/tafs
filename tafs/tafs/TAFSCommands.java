@@ -18,6 +18,10 @@ public enum TAFSCommands
 	prepsendfile("prepsendfile"),
 	useloc("useloc"),
 
+	cache(""),
+	nocache("nocache"),
+
+	// Responses
 	notok("notok"),
 	ok("ok");
 
@@ -25,7 +29,6 @@ public enum TAFSCommands
 
 	private TAFSCommands(String inCmd)
 	{
-		// TODO Auto-generated constructor stub
 		cmdStr = inCmd;
 	}
 

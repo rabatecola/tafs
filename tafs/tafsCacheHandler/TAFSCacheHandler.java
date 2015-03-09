@@ -7,6 +7,7 @@ package tafsCacheHandler;
 import java.util.logging.Logger;
 
 import tafs.TAFSGlobalConfig;
+import tafs.TAFSOptions;
 import tafsComm.TAFSCommHandler;
 
 /**
@@ -18,14 +19,21 @@ public class TAFSCacheHandler
 	private final static String	className = TAFSCacheHandler.class.getSimpleName();
 	private final static Logger log = Logger.getLogger(className);
 
-	//	public TAFSCacheHandler()
-//	{
-//	}
+	public TAFSCacheHandler() throws InterruptedException
+	{
+		this.RunCH();
+	}
 
+	// main declaration to enable directly calling this class
 	public static void main(String[] args) throws InterruptedException
 	{
+		new TAFSCacheHandler();
+	}
+
+	public void RunCH() throws InterruptedException
+	{
 		long			tempCounter = 0;
-		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.listenPort);
+		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.listenPort));
 		TAFSCommHandler	threadCH;
 
 		log.info("Entered " + className);

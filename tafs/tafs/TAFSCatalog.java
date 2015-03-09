@@ -62,7 +62,8 @@ public class TAFSCatalog
 		}
 	}
 
-	// Load the catalog from a tab-delimited file containing one fileName and serverID on each line.
+	// Load the catalog from a file containing one fileName and serverID on each line.
+	// The file name and server ID should be separated by white space.
 	public void LoadEntriesFromFile(String inCatFileName) throws FileNotFoundException, IOException
 	{
 		File			file = null;
@@ -90,8 +91,8 @@ public class TAFSCatalog
 				if (oneLine.startsWith("#") || oneLine.startsWith("//"))
 					continue;
 
-				// Ignore lines that do not have two tab-separated strings.
-				oneLineParts = oneLine.split("\t");
+				// Ignore lines that do not have two strings separated by white space.
+				oneLineParts = oneLine.split("\\s+");
 				if (oneLineParts.length != 2)
 					continue;
 

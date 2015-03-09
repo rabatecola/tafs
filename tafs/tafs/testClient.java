@@ -13,8 +13,6 @@ import java.io.BufferedOutputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import tafsComm.TAFSMessage;
-
 public class testClient
 {
 
@@ -28,6 +26,8 @@ public static void main(String[] args) throws FileNotFoundException, IOException
 	Boolean		haveFileData = false;
 	TAFSFile	myTAFSFile = null;
 
+	TAFSGlobalConfig.LoadConfigFromFile();
+
 	if (args.length > 0)
 	{
 		fileName = args[0];
@@ -39,10 +39,10 @@ public static void main(String[] args) throws FileNotFoundException, IOException
 	systemProperties.put("net.spy.log.LoggerImpl", "net.spy.memcached.compat.log.SunLogger");
 	System.setProperties(systemProperties);
 
-	Logger.getLogger("net.spy.memcached").setLevel(TAFSGlobalConfig.memcachedlogLevel);
+	Logger.getLogger("net.spy.memcached").setLevel(TAFSGlobalConfig.getLevel(TAFSOptions.memcachedlogLevel));
 //	Logger.getLogger("net.spy.memcached").setLevel(Level.WARNING);
 
-	myTAFSFile = new TAFSFile(fileName, TAFSGlobalConfig.cacheServers);
+	myTAFSFile = new TAFSFile(fileName, TAFSGlobalConfig.getString(TAFSOptions.cacheServers));
 
 	try
 	{

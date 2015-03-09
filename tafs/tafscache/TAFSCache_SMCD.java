@@ -8,6 +8,7 @@ package tafscache;
 import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.MemcachedClient;
@@ -17,6 +18,9 @@ public class TAFSCache_SMCD implements TAFSCacheInterface
 	// =============+=============+=============+=============+=============
 	// Begin: Cache-related private members
 	// Consider moving to separate class that implements a generalized interface.
+
+	private final static String	className = TAFSCache_SMCD.class.getSimpleName();
+	private final static Logger log = Logger.getLogger(className);
 
 	// Cache-related member variables
 	private MemcachedClient	cache = null;
@@ -60,16 +64,16 @@ public class TAFSCache_SMCD implements TAFSCacheInterface
 			try
 			{
 				if (!myResult.get(10, TimeUnit.SECONDS))
-					System.out.println("Cache did not store data.");
+					log.info("Cache did not store data.");
 			}
 			catch(Exception e)
 			{
-				System.out.println("Cache did not store data: " + e.getMessage());
+				log.info("Cache did not store data: " + e.getMessage());
 			}
 		}
 		catch(IllegalStateException eIS)
 		{
-			System.out.println("IllegalStateException: " + eIS.getMessage());
+			log.info("IllegalStateException: " + eIS.getMessage());
 		}
 	}
 	// End: Cache-related private members
