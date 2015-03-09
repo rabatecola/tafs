@@ -38,13 +38,19 @@ public class TAFSClient
 
 	private byte[] getFileFromHost(String inFileName, String inHostIP, Boolean inUseCache)
 	{
-		Integer				listenPort = TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort);
+		return getFileFromHost(inFileName, inHostIP, TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort), inUseCache);
+	}
+
+	private byte[] getFileFromHost(String inFileName, String inHostIP, Integer inHostPort, Boolean inUseCache)
+	{
+		Integer				listenPort = inHostPort;
 		TAFSCommHandler		theCH = new TAFSCommHandler(listenPort);
 		TAFSMessageHandler	theMH;
 		TAFSMessage			responseMsg;
 		ArrayList<String>	theArgs = new ArrayList<String>();
 		byte[]				resultBytes = null;
 		String				fileHostIP = "";
+		Integer				fileHostPort = listenPort;
 
 		log.info("Sending request to " + inHostIP + " for file '" + inFileName + "' with" + (inUseCache ? "" : "out") + " cache");
 
@@ -61,7 +67,9 @@ public class TAFSClient
 
 		if (responseMsg.myArgs.size() > 0)
 			fileHostIP = responseMsg.myArgs.get(0);
-		log.info("Response from " + inHostIP + ": " + responseMsg.myMsg + " " + fileHostIP);
+		if (responseMsg.myArgs.size() > 1)
+			fileHostPort = Integer.parseInt(responseMsg.myArgs.get(1));
+		log.info("Response from " + inHostIP + ": " + responseMsg.myMsg + " " + fileHostIP + ":" + fileHostPort);
 
 		theArgs.clear();
 		theMH.SendMessage(TAFSCommands.ok.getCmdStr(), theArgs, null);
@@ -75,7 +83,7 @@ public class TAFSClient
 			if (fileHostIP.isEmpty())
 				log.severe("Empty host IP received from " + inHostIP);
 			else
-				resultBytes = getFileFromHost(inFileName, fileHostIP, inUseCache);
+				resultBytes = getFileFromHost(inFileName, fileHostIP, fileHostPort, inUseCache);
 		}
 		else
 		// ok response means that payload is attached to the message

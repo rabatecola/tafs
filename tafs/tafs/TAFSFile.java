@@ -25,11 +25,13 @@ public class TAFSFile
 	private BufferedOutputStream	bos = null;
 	private Boolean					cacheReads = true;
 	private Boolean					cacheWrites = false;
-	private TAFSCache_SMCD	myCache = null;
+	private TAFSCache_SMCD			myCache = null;
+	private String					filePath = "";
 
 	public TAFSFile(String inFileName, String inCacheServers)
 	{
 		fileName = inFileName;
+		filePath = TAFSGlobalConfig.getString(TAFSOptions.chDataDir) + fileName;
 		myCache = new TAFSCache_SMCD(inCacheServers);
 	}
 
@@ -94,7 +96,8 @@ public class TAFSFile
 
 		try
 		{
-			file = new File(fileName);
+			log.fine("Reading '" + filePath + "'");
+			file = new File(filePath);
 			// Get the size of the file
 			length = file.length();
 			if (length > Integer.MAX_VALUE)
@@ -110,7 +113,7 @@ public class TAFSFile
 				count = bis.read(fileByteArray);
 				if (count == -1 || count == length)
 				{
-					log.info("\tFile read to end: " + fileName);
+					log.info("\tFile read to end: " + filePath);
 				}
 			}
 		}
@@ -156,7 +159,7 @@ public class TAFSFile
 			writeByteArray = new byte[0];
 		}
 
-		bos = new BufferedOutputStream(new FileOutputStream(fileName));
+		bos = new BufferedOutputStream(new FileOutputStream(filePath));
 	}
 
 	public void Flush() throws IOException

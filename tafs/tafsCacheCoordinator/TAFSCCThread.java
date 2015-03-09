@@ -94,7 +94,7 @@ public class TAFSCCThread implements Runnable
 	// Message format:
 	//     getfile <filename> [cache|nocache]
 	// Responses:
-	// 	   useloc <host IP>
+	// 	   useloc <host IP> <hostPort>
 	//	   notok <exception message>
 	private void GetFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
 	{
@@ -140,6 +140,7 @@ public class TAFSCCThread implements Runnable
 		outMsg.myMsg = TAFSCommands.useloc.getCmdStr();
 		outMsg.myArgs.clear();
 		outMsg.myArgs.add(hostIP);
+		outMsg.myArgs.add(TAFSGlobalConfig.getString(TAFSOptions.chListenPort));
 
 		inRequesterMH.SendMessage(outMsg);
 		response = inRequesterMH.ReadMessage();

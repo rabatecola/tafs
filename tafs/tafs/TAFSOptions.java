@@ -16,7 +16,8 @@ public enum TAFSOptions
 	cacheServers("cacheServers"),
 	catalogFile("catalogFile"),
 	ccIP("ccIP"),
-	chIP("chIP");
+	chIP("chIP"),
+	chDataDir("chDataDir");
 
 	private final	String optStr;
 
