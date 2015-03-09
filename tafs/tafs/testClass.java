@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 public class testClass implements Serializable
 {
+	private static final long	serialVersionUID = 543;
+
 	public String	myName;
 	public String	mySecondString;
 	public Integer	myInteger;

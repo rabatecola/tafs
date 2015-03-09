@@ -12,8 +12,6 @@ import java.util.Properties;
 import java.util.logging.Logger;
 import java.io.InputStream;
 
-import tafsComm.TAFSMessage;
-
 public class testServer
 {
 	static ServerSocket	serverSocket = null;
@@ -29,12 +27,14 @@ public class testServer
  */
 	public static void main(String[] args) throws IOException, ClassNotFoundException
 	{
+		TAFSGlobalConfig.LoadConfigFromFile();
+
 		// Tell spy to use the SunLogger
 		Properties systemProperties = System.getProperties();
 		systemProperties.put("net.spy.log.LoggerImpl", "net.spy.memcached.compat.log.SunLogger");
 		System.setProperties(systemProperties);
 
-		Logger.getLogger("net.spy.memcached").setLevel(TAFSGlobalConfig.memcachedlogLevel);
+		Logger.getLogger("net.spy.memcached").setLevel(TAFSGlobalConfig.getLevel(TAFSOptions.memcachedlogLevel));
 //		Logger.getLogger("net.spy.memcached").setLevel(Level.OFF);
 
 		try
@@ -75,7 +75,7 @@ public class testServer
 			System.out.println("Can't get socket input stream. ");
 		}
 
-		myTAFSFile = new TAFSFile("spymemcached-2.10.3-javadoc.jar_COPIED", TAFSGlobalConfig.cacheServers);
+		myTAFSFile = new TAFSFile("spymemcached-2.10.3-javadoc.jar_COPIED", TAFSGlobalConfig.getString(TAFSOptions.cacheServers));
 		myTAFSFile.SetCacheWrites(true);
 		myTAFSFile.OpenForWriting();
 

@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import tafs.TAFSCommands;
 import tafs.TAFSFile;
 import tafs.TAFSGlobalConfig;
+import tafs.TAFSOptions;
 import tafsComm.TAFSCommHandler;
 import tafsComm.TAFSMessage;
 import tafsComm.TAFSMessageHandler;
@@ -41,7 +42,7 @@ public class TAFSCHThread implements Runnable
 			TAFSFile	theFile;
 
 			log.info("FileCachingThread running");
-			theFile = new TAFSFile(myFileName, TAFSGlobalConfig.cacheServers);
+			theFile = new TAFSFile(myFileName, TAFSGlobalConfig.getString(TAFSOptions.cacheServers));
 			try
 			{
 				theFile.GetFile();
@@ -158,9 +159,9 @@ public class TAFSCHThread implements Runnable
 	// Message format:
 	//     getfile <filename> [cache|nocache]
 	// Responses:
-	//	   ok
-	//		   - followed by -
-	//		   <serialized TAFSMessage object>
+	//	   ok with serialized TAFSMessage object
+	//		   ////NO - followed by -
+	//		   ////NO <serialized TAFSMessage object>
 	//	   notok <exception message>
 	private void GetFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
 	{
@@ -168,12 +169,17 @@ public class TAFSCHThread implements Runnable
 		TAFSMessage	response;
 		TAFSMessage	outMsg = new TAFSMessage();
 		TAFSFile	theFile;
+		Boolean		useCache = true;
 
 		// Find the file in the catalog.
 		fileName = inMsg.myArgs.get(0);
 		log.info("GetFile called, file name = '" + fileName + "'");
 
-		theFile = new TAFSFile(fileName, TAFSGlobalConfig.cacheServers);
+		if (inMsg.myArgs.size() > 1)
+			useCache = inMsg.myArgs.get(1).equals(TAFSCommands.cache.getCmdStr());
+
+		theFile = new TAFSFile(fileName, TAFSGlobalConfig.getString(TAFSOptions.cacheServers));
+		theFile.SetCacheReads(useCache);
 		try
 		{
 			outMsg.myPayload = theFile.GetFile();
@@ -194,6 +200,7 @@ public class TAFSCHThread implements Runnable
 
 	private void PrepRecvFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
 	{
+		log.info("PrepRecvFile called");
 	}
 
 	private void PutFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)

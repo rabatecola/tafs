@@ -4,14 +4,16 @@
  */
 package tafsCacheCoordinator;
 
-//import java.io.IOException;
-
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.security.CodeSource;
 import java.util.logging.Logger;
 
 import tafs.TAFSCatalog;
 import tafs.TAFSGlobalConfig;
+import tafs.TAFSOptions;
 import tafsComm.TAFSCommHandler;
 
 /**
@@ -23,25 +25,51 @@ public class TAFSCacheCoordinator
 	private final static String	className = TAFSCacheCoordinator.class.getSimpleName();
 	private final static Logger log = Logger.getLogger(className);
 
-//	public TAFSCacheCoordinator()
-//	{
-//	}
+	public TAFSCacheCoordinator() throws FileNotFoundException, IOException, InterruptedException
+	{
+		this.RunCC();
+	}
 
+	// main declaration to enable directly calling this class
 	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException
+	{
+		new TAFSCacheCoordinator();
+	}
+
+	public void RunCC() throws FileNotFoundException, IOException, InterruptedException
 	{
 		TAFSCatalog		myCat = new TAFSCatalog();
 		long			tempCounter = 0;
-		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.listenPort);
+		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.listenPort));
 		TAFSCommHandler	threadCH;
 
 		TAFSGlobalConfig.SetLoggingLevel("");
 
+		String path = TAFSCacheCoordinator.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String decodedPath = URLDecoder.decode(path, "UTF-8");
+		log.info("Starting " + decodedPath);
+		CodeSource codeSource = TAFSCacheCoordinator.class.getProtectionDomain().getCodeSource();
+		File jarFile;
+//		try
+//		{
+			jarFile = new File(codeSource.getLocation().getPath());
+			String jarDir = jarFile.getPath();
+			log.info("jarDir = " + URLDecoder.decode(jarDir, "UTF-8"));
+			log.info("jarFile = " + URLDecoder.decode(jarFile.getName(), "UTF-8"));
+//		}
+//		catch (URISyntaxException e)
+//		{
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+
 		log.info("Entered " + className);
 
 		// Load the catalog from disk.
-		myCat.LoadEntriesFromFile(TAFSGlobalConfig.catalogFile);
+		String	catFile = TAFSGlobalConfig.getString(TAFSOptions.catalogFile);
+		myCat.LoadEntriesFromFile(catFile);
 		myCat.DisplayEntries();
-		log.info("Loaded from catalog file '" + TAFSGlobalConfig.catalogFile + "'");
+		log.info("Loaded from catalog file '" + catFile + "'");
 
 		while (true)
 		{

@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import tafs.TAFSCatalog;
 import tafs.TAFSCommands;
 import tafs.TAFSGlobalConfig;
+import tafs.TAFSOptions;
 import tafsComm.TAFSCommHandler;
 import tafsComm.TAFSMessage;
 import tafsComm.TAFSMessageHandler;
@@ -109,17 +110,17 @@ public class TAFSCCThread implements Runnable
 		// Find the file in the catalog.
 		fileName = inMsg.myArgs.get(0);
 		if (inMsg.myArgs.size() > 1)
-			useCache = inMsg.myArgs.get(1) != "nocache";
+			useCache = inMsg.myArgs.get(1).equals(TAFSCommands.cache.getCmdStr());
 		hostIP = myCatalog.GetFileEntryServerID(fileName);
 
 		// If caching, notify the file's host of the impending request.
-		// TO-DO: consider sending this request in a separate thread
+		// TODO consider sending this request in a separate thread
 		if (useCache)
 		{
 			outMsg.myMsg = TAFSCommands.prepsendfile.getCmdStr();
 			outMsg.myArgs.add(fileName);
 
-			hostCH = new TAFSCommHandler(TAFSGlobalConfig.listenPort);
+			hostCH = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.listenPort));
 			hostCH.Open(hostIP);
 			hostMH = new TAFSMessageHandler(hostCH);
 
