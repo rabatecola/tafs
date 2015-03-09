@@ -23,46 +23,6 @@ public class TAFSClient
 	public byte[] getFile(String inFileName, Boolean inUseCache)
 	{
 		return getFileFromHost(inFileName, TAFSGlobalConfig.getString(TAFSOptions.ccIP), inUseCache);
-
-//		TAFSCommHandler		theCH = new TAFSCommHandler(TAFSGlobalConfig.listenPort);
-//		TAFSMessageHandler	theMH;
-//		TAFSMessage			responseMsg;
-//		ArrayList<String>	theArgs;
-//		byte[]				resultBytes = null;
-//		String				useCacheString = inUseCache ? TAFSCommands.cache.getCmdStr() : TAFSCommands.nocache.getCmdStr();
-//
-//		log.info("Sending request to CC for file '" + inFileName + "' with" + (inUseCache ? "" : "out") + " cache");
-//
-//		log.fine("Opening connection to CC at " + TAFSGlobalConfig.ccIP + ":" + TAFSGlobalConfig.listenPort);
-//		theCH.Open(TAFSGlobalConfig.ccIP);
-//		theMH = new TAFSMessageHandler(theCH);
-//
-//		theArgs.add(inFileName);
-//		theArgs.add(useCacheString);
-//		log.fine("Sending message to CC");
-//		theMH.SendMessage(TAFSCommands.getfile.getCmdStr(), theArgs, null);
-//		log.fine("Reading response from CC");
-//		responseMsg = theMH.ReadMessage();
-//
-//		if (responseMsg.myMsg.equals(TAFSCommands.useloc.getCmdStr()))
-//		{
-//			String	hostIP = responseMsg.myArgs.get(0);
-//
-//			log.info("CC responded with CH host " + hostIP);
-//			resultBytes = getFileFromHost(inFileName, hostIP, inUseCache);
-//		}
-//		else
-//		{
-//			String	logMsg;
-//
-//			logMsg = "CC response: " + responseMsg.myMsg;
-//			if (responseMsg.myArgs.size() > 0)
-//				logMsg += ", " + responseMsg.myArgs.get(0);
-//
-//			log.warning(logMsg);
-//		}
-//
-//		return resultBytes;
 	}
 
 	public byte[] getFile(String inFileName)

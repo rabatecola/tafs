@@ -32,6 +32,7 @@ public class TAFSGlobalConfig
 	private static Map<String,String>	optionList = new HashMap<String,String>();
 
 	private static final String		defaultConfigFile = "tafs.conf";
+	private static final Level		defaultLogLevel = Level.INFO;
 //	private static final Integer	listenPort = 48611;	// 48611 is the 5000th prime number.  Oh joy.
 //	private static final Level		logLevel = Level.ALL;
 //	private static final Level		memcachedlogLevel = Level.FINEST;
@@ -42,16 +43,26 @@ public class TAFSGlobalConfig
 
 	public static void SetLoggingLevel(String inLoggerName)
 	{
-		Logger theLogger = Logger.getLogger(inLoggerName);
+		Level	theLevel;
+		Logger	theLogger = Logger.getLogger(inLoggerName);
 
-		theLogger.setLevel(getLevel(TAFSOptions.logLevel));
+		try
+		{
+			theLevel = getLevel(TAFSOptions.logLevel);
+		}
+		catch(NullPointerException eNP)
+		{
+			theLevel = defaultLogLevel;
+		}
+
+		theLogger.setLevel(theLevel);
 		theLogger.getHandlers();
 	    for (Handler handler : theLogger.getHandlers())
 	    {
             // Set level in the console handler
 	        if (handler instanceof ConsoleHandler)
 	        {
-	        	((ConsoleHandler)handler).setLevel(getLevel(TAFSOptions.logLevel));
+	        	((ConsoleHandler)handler).setLevel(theLevel);
 	            break;
 	        }
 	    }
@@ -143,7 +154,7 @@ public class TAFSGlobalConfig
 		SetLoggingLevel("");
 		if (log.isLoggable(Level.FINE))
 		{
-			System.out.println("Options read from file:");
+			log.fine("Options read from file:");
 			DisplayEntries();
 		}
 	}

@@ -7,17 +7,6 @@ package tafs;
  * @author robert
  *
  */
-//listenPort	48611
-//logLevel	Level.ALL
-//memcachedlogLevel	Level.FINEST
-//# cacheServers: memcached server IP addresses
-//cacheServers	"127.0.0.1:11211,127.0.0.1:11212"
-//catalogFile	tafsCatalog.dat
-//# ccIP: Cache Coordinator's IP address.
-//ccIP	192.168.97.43
-//# chIP: Cache Handler's ip address.  More than one can be specified.
-//chIP	192.168.97.47
-//chIP	192.168.97.48
 public enum TAFSOptions
 {
 	listenPort("listenPort"),
