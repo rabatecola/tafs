@@ -36,3 +36,6 @@ runcc:
 	
 runch:
 	java -cp $(PTARGET)/tafsch tafs
+
+runtestapi:
+	java -cp $(PTARGET)/tafsch tafs.TestTAFSClient

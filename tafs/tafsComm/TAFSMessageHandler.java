@@ -3,13 +3,17 @@
  */
 package tafsComm;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 /**
- * @author Robert Abatecola
+ * @author Mahitha Thokala
  *
  */
 public class TAFSMessageHandler
 {
 	TAFSCommHandler	myCH;
+
 
 	public TAFSMessageHandler(TAFSCommHandler inCH)
 	{
@@ -19,23 +23,38 @@ public class TAFSMessageHandler
 
 	public TAFSMessage ReadMessage()
 	{
+		TAFSMessage	aMsg = null;
+
 		// Reads a message object from CommHandler.
-		return null;
+		try {
+			aMsg = (TAFSMessage)myCH.ReadObject();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return aMsg;
 	}
 
 	public void SendMessage(TAFSMessage inMsg)
 	{
 		// Writes a message object to CommHandler.
+		try {
+			myCH.WriteObject(inMsg);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public void SendMessage(String inMsg, String[] inArgs, byte[] inPayload)
+	public void SendMessage(String inMsg, ArrayList<String> inArgs, byte[] inPayload)
 	{
-		TAFSMessage	aMessage = new TAFSMessage();
+		TAFSMessage	cMessage = new TAFSMessage();
 
-		aMessage.myMsg = inMsg;
-		aMessage.myArgs = inArgs;
-		aMessage.myPayload = inPayload;
+	  cMessage.myMsg = inMsg;
+		cMessage.myArgs = inArgs;
+		cMessage.myPayload = inPayload;
 
-		SendMessage(aMessage);
+		SendMessage(cMessage);
 	}
 }

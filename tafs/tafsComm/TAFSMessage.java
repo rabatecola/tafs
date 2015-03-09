@@ -15,6 +15,6 @@ public class TAFSMessage implements Serializable
 	private static final long	serialVersionUID = 543;
 
 	public String				myMsg;
-	public ArrayList<String>	myArgs;
+	public ArrayList<String>	myArgs = new ArrayList<String>();
 	public byte[]				myPayload = null;
 }

@@ -25,7 +25,8 @@ public class TAFSCCThread implements Runnable
 	TAFSCatalog		myCatalog;
 	String			myMsg;
 
-	private final static Logger log = Logger.getLogger(TAFSCCThread.class.getName());
+	private final static String	className = TAFSCCThread.class.getSimpleName();
+	private final static Logger log = Logger.getLogger(className);
 
 	public TAFSCCThread(TAFSCommHandler inCH, TAFSCatalog inCatalog, String inMsg)
 	{
@@ -46,14 +47,14 @@ public class TAFSCCThread implements Runnable
 		String				dummyMsg = "GetFilex";
 		TAFSCommands		aCmd;
 
-		log.info("\n" + myMsg + " - ");
+		log.info(myMsg);
 
 		try
 		{
 			aMH = new TAFSMessageHandler(myCH);
 			aMsg = aMH.ReadMessage();
 
-			//dummyMsg = aMsg.myMsg;
+			dummyMsg = aMsg.myMsg;
 			try
 			{
 				aCmd = TAFSCommands.valueOf(dummyMsg.toLowerCase());
@@ -105,13 +106,13 @@ public class TAFSCCThread implements Runnable
 		TAFSCommHandler		hostCH;
 		TAFSMessageHandler	hostMH;
 
-		log.info("GetFile called");
-
 		// Find the file in the catalog.
 		fileName = inMsg.myArgs.get(0);
 		if (inMsg.myArgs.size() > 1)
 			useCache = inMsg.myArgs.get(1).equals(TAFSCommands.cache.getCmdStr());
 		hostIP = myCatalog.GetFileEntryServerID(fileName);
+
+		log.info("File name: '" + fileName + "'");
 
 		// If caching, notify the file's host of the impending request.
 		// TODO consider sending this request in a separate thread
@@ -120,7 +121,9 @@ public class TAFSCCThread implements Runnable
 			outMsg.myMsg = TAFSCommands.prepsendfile.getCmdStr();
 			outMsg.myArgs.add(fileName);
 
-			hostCH = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.listenPort));
+			// Connect on cache handler's port
+			log.info("Connecting to cache handler");
+			hostCH = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.chListenPort));
 			hostCH.Open(hostIP);
 			hostMH = new TAFSMessageHandler(hostCH);
 
@@ -133,6 +136,7 @@ public class TAFSCCThread implements Runnable
 		}
 
 		// Notify the requester of the location of the file.
+		log.info("Notifying requester of file location " + hostIP);
 		outMsg.myMsg = TAFSCommands.useloc.getCmdStr();
 		outMsg.myArgs.clear();
 		outMsg.myArgs.add(hostIP);

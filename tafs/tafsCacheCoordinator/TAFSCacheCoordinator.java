@@ -7,6 +7,7 @@ package tafsCacheCoordinator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.security.CodeSource;
 import java.util.logging.Logger;
@@ -33,6 +34,7 @@ public class TAFSCacheCoordinator
 	// main declaration to enable directly calling this class
 	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException
 	{
+		TAFSGlobalConfig.LoadConfigFromFile();
 		new TAFSCacheCoordinator();
 	}
 
@@ -40,10 +42,8 @@ public class TAFSCacheCoordinator
 	{
 		TAFSCatalog		myCat = new TAFSCatalog();
 		long			tempCounter = 0;
-		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.listenPort));
+		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort));
 		TAFSCommHandler	threadCH;
-
-		TAFSGlobalConfig.SetLoggingLevel("");
 
 		String path = TAFSCacheCoordinator.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		String decodedPath = URLDecoder.decode(path, "UTF-8");
@@ -74,16 +74,18 @@ public class TAFSCacheCoordinator
 		while (true)
 		{
 			// Listen for message
+			log.info(className + "(" + tempCounter + "): Host address is " + InetAddress.getLocalHost().getHostAddress());
 			log.info(className + "(" + tempCounter + "): Waiting for message...");
-			// Temp sleep until comm handler is written
-			Thread.sleep(1000);
-			System.out.println();
+
 			threadCH = aCommHandler.Listen();
 
 			// Spin off thread to handle message
 			log.info(className + ": Received message, executing thread.");
 
 			new TAFSCCThread(threadCH, myCat, "Thread for loop #" + tempCounter);
+
+			// Pause for a second before continuing
+			Thread.sleep(1000);
 
 			tempCounter++;
 			if (tempCounter >= 10)

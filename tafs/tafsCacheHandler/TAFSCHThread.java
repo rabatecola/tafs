@@ -34,7 +34,7 @@ public class TAFSCHThread implements Runnable
 			myFileName = inFileName;
 
 			// Start me up
-			new Thread(this).start();
+//			new Thread(this).start();
 		}
 
 		public void run()
@@ -79,7 +79,7 @@ public class TAFSCHThread implements Runnable
 			aMH = new TAFSMessageHandler(myCH);
 			aMsg = aMH.ReadMessage();
 
-			//dummyMsg = aMsg.myMsg;
+			dummyMsg = aMsg.myMsg;
 			try
 			{
 				aCmd = TAFSCommands.valueOf(dummyMsg.toLowerCase());

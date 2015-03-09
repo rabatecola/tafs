@@ -9,7 +9,8 @@ package tafs;
  */
 public enum TAFSOptions
 {
-	listenPort("listenPort"),
+	ccListenPort("ccListenPort"),
+	chListenPort("chListenPort"),
 	logLevel("logLevel"),
 	memcachedlogLevel("memcachedlogLevel"),
 	cacheServers("cacheServers"),
