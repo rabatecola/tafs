@@ -4,6 +4,8 @@
 package tafsCacheHandler;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import tafs.TAFSCommands;
@@ -136,7 +138,7 @@ public class TAFSCHThread implements Runnable
 		Boolean		useCache = true;
 		TAFSMessage	outMsg = new TAFSMessage();
 
-		log.info("PrepRecvFile called, file name = '" + fileName + "'");
+		log.info("PrepSendFile called, file name = '" + fileName + "'");
 
 		if (inMsg.myArgs.size() > 1)
 			useCache = inMsg.myArgs.get(1) != "nocache";
@@ -153,6 +155,7 @@ public class TAFSCHThread implements Runnable
 		outMsg.myMsg = TAFSCommands.ok.getCmdStr();
 
 		// Notify the requester of the outcome.
+		log.info("Notifying requester of result");
 		inRequesterMH.SendMessage(outMsg);
 	}
 
@@ -185,6 +188,94 @@ public class TAFSCHThread implements Runnable
 			outMsg.myPayload = theFile.GetFile();
 			outMsg.myMsg = TAFSCommands.ok.getCmdStr();
 			outMsg.myArgs.add(fileName);
+			log.fine(fileName + " read");
+		}
+		catch(IOException eIO)
+		{
+			outMsg.myMsg = TAFSCommands.notok.getCmdStr();
+			outMsg.myArgs.add("IOException: " + eIO.getMessage());
+			log.severe("IOException: " + eIO.getMessage() + ", " + fileName + "not read");
+		}
+
+		// Notify the requester of the result.
+		log.info("Notifying requester of result");
+		inRequesterMH.SendMessage(outMsg);
+		response = inRequesterMH.ReadMessage();
+		log.info("Response from requester: " + response.myMsg);
+	}
+
+	// Message format:
+	//     preprecvfile <filename> <size> [cache|nocache]
+	// Responses:
+	// 	   ok [nocache]
+	//	   notok <exception message>
+	// TODO: Use size parameter to check if enough space is available to store the file
+	private void PrepRecvFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
+	{
+		// Get the file name and find it in the cache
+		String		fileName = inMsg.myArgs.get(0);
+		Boolean		useCache = true;
+		TAFSMessage	outMsg = new TAFSMessage();
+
+		log.info("PrepRecvFile called, file name = '" + fileName + "'");
+
+		if (inMsg.myArgs.size() > 1)
+			useCache = inMsg.myArgs.get(1) != "nocache";
+
+		// If not using cache, nothing left to do.
+		if (useCache)
+		{
+			// Start thread to handle reading and caching of the file
+//			new FileCachingThread(fileName);
+		}
+		else
+			outMsg.myArgs.add("nocache");
+
+		outMsg.myMsg = TAFSCommands.ok.getCmdStr();
+
+		// Notify the requester of the outcome.
+		log.info("Notifying requester of result");
+		inRequesterMH.SendMessage(outMsg);
+	}
+
+	// Message format:
+	//     putfile <filename> [cache|nocache]
+	//	   Message payload contains file data
+	// Responses:
+	//	   ok
+	//	   notok <exception message>
+	//
+	// Notification to Cache coordinator:
+	//	   addtocat <filename> <hostIP>
+	private void PutFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
+	{
+		String		fileName;
+		TAFSMessage	response;
+		TAFSMessage	outMsg = new TAFSMessage();
+		TAFSFile	theFile;
+		Boolean		useCache = true;
+		Boolean		writeSuccess = false;
+
+		// Find the file in the catalog.
+		fileName = inMsg.myArgs.get(0);
+		log.info("PutFile called, file name = '" + fileName + "'");
+
+		if (inMsg.myArgs.size() > 1)
+			useCache = inMsg.myArgs.get(1).equals(TAFSCommands.cache.getCmdStr());
+
+		// Write the file to storage
+//		WriteFile(fileName, inMsg.myPayload);
+
+		theFile = new TAFSFile(fileName, TAFSGlobalConfig.getString(TAFSOptions.cacheServers));
+		theFile.SetCacheWrites(useCache);
+
+		try
+		{
+			theFile.WriteFile(inMsg.myPayload);
+			writeSuccess = true;
+
+			outMsg.myMsg = TAFSCommands.ok.getCmdStr();
+			outMsg.myArgs.add(fileName);
 		}
 		catch(IOException eIO)
 		{
@@ -193,19 +284,43 @@ public class TAFSCHThread implements Runnable
 		}
 
 		// Notify the requester of the result.
+		log.info("Notifying requester of result");
 		inRequesterMH.SendMessage(outMsg);
 		response = inRequesterMH.ReadMessage();
 		log.info("Response from requester: " + response.myMsg);
-	}
 
-	private void PrepRecvFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
-	{
-		log.info("PrepRecvFile called");
-	}
+		// Notify the Cache Coordinator of the newly received file.
+		if (writeSuccess)
+		{
+			TAFSCommHandler		ccCH = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort));
+			TAFSMessageHandler	ccMH;
 
-	private void PutFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
-	{
-		log.info("PutFile called");
+			log.info("Notifying coordinator of newly received file");
+
+			// TODO Rework to use exceptions properly
+			ccCH = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort));
+			ccCH.Open(TAFSGlobalConfig.getString(TAFSOptions.ccIP));
+			ccMH = new TAFSMessageHandler(ccCH);
+
+			outMsg = new TAFSMessage();
+			outMsg.myMsg = TAFSCommands.addtocat.getCmdStr();
+			outMsg.myArgs.add(fileName);
+			try
+			{
+				outMsg.myArgs.add(InetAddress.getLocalHost().getHostAddress());
+			}
+			catch(UnknownHostException eUH)
+			{
+				// If this happens, Cache Coordinator will use IP address on the connection
+				log.warning("Could not get my IP address: " + eUH.getMessage());
+			}
+
+			ccMH.SendMessage(outMsg);
+			response = ccMH.ReadMessage();
+			log.info("Response from coordinator: " + response.myMsg);
+
+			ccCH.Close();
+		}
 	}
 
 	private void DelFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)

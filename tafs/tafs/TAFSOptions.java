@@ -13,11 +13,13 @@ public enum TAFSOptions
 	chListenPort("chListenPort"),
 	logLevel("logLevel"),
 	memcachedlogLevel("memcachedlogLevel"),
+	memcachedTTL("memcachedTTL"),
 	cacheServers("cacheServers"),
 	catalogFile("catalogFile"),
 	ccIP("ccIP"),
 	chIP("chIP"),
-	chDataDir("chDataDir");
+	chDataDir("chDataDir"),
+	catSaveInterval("catSaveInterval");
 
 	private final	String optStr;
 

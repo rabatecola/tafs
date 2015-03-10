@@ -18,6 +18,8 @@ public enum TAFSCommands
 	prepsendfile("prepsendfile"),
 	useloc("useloc"),
 
+	addtocat("addtocat"),
+
 	cache(""),
 	nocache("nocache"),
 

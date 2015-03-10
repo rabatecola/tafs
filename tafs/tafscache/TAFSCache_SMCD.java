@@ -10,6 +10,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import tafs.TAFSGlobalConfig;
+import tafs.TAFSOptions;
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.MemcachedClient;
 
@@ -60,20 +62,22 @@ public class TAFSCache_SMCD implements TAFSCacheInterface
 	{
 		try
 		{
-			Future<Boolean>	myResult = cache.set(inFileName, 3600, inFileBytes);
+			Future<Boolean>	myResult = cache.set(inFileName, TAFSGlobalConfig.getInteger(TAFSOptions.memcachedTTL), inFileBytes);
 			try
 			{
-				if (!myResult.get(10, TimeUnit.SECONDS))
-					log.info("Cache did not store data.");
+				if (myResult.get(10, TimeUnit.SECONDS))
+					log.info("Data stored to cache.");
+				else
+					log.warning("Cache did not store data.");
 			}
 			catch(Exception e)
 			{
-				log.info("Cache did not store data: " + e.getMessage());
+				log.warning("Cache did not store data: " + e.getMessage());
 			}
 		}
 		catch(IllegalStateException eIS)
 		{
-			log.info("IllegalStateException: " + eIS.getMessage());
+			log.severe("IllegalStateException: " + eIS.getMessage());
 		}
 	}
 	// End: Cache-related private members

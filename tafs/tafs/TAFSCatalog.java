@@ -8,14 +8,21 @@ import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class TAFSCatalog
 {
+	private final static String	className = TAFSCatalog.class.getSimpleName();
+	private final static Logger log = Logger.getLogger(className);
+
 	private Map<String,String>	fileCatalog = new HashMap<String,String>();
+	private Boolean				catDirty = false;
 
 //	public static void main(String[] args) throws IOException
 //	{
@@ -38,6 +45,14 @@ public class TAFSCatalog
 //		System.out.println("Entry for junk.xlsx is " + myCC.GetFileEntryServerID("junk.xlsx"));
 //	}
 
+	public Boolean isDirty()
+	{
+		synchronized (catDirty)
+		{
+			return catDirty;
+		}
+	}
+
 	public String GetFileEntryServerID(String inFileName)
 	{
 		synchronized(fileCatalog)
@@ -51,6 +66,10 @@ public class TAFSCatalog
 		synchronized(fileCatalog)
 		{
 	    	fileCatalog.put(inFileName, inServerID);
+			synchronized (catDirty)
+			{
+				catDirty = true;
+			}
 		}
 	}
 
@@ -59,6 +78,10 @@ public class TAFSCatalog
 		synchronized(fileCatalog)
 		{
 			fileCatalog.remove(inFileName);
+			synchronized (catDirty)
+			{
+				catDirty = true;
+			}
 		}
 	}
 
@@ -80,26 +103,34 @@ public class TAFSCatalog
 
 		try
 		{
-			do
+			synchronized(fileCatalog)
 			{
-				oneLine = myBR.readLine();
-				if (oneLine == null)
-					break;
+				do
+				{
+					oneLine = myBR.readLine();
+					if (oneLine == null)
+						break;
 
-				// Treat lines beginning with # or // as comments.
-				oneLine = oneLine.trim();
-				if (oneLine.startsWith("#") || oneLine.startsWith("//"))
-					continue;
+					// Treat lines beginning with # or // as comments.
+					oneLine = oneLine.trim();
+					if (oneLine.startsWith("#") || oneLine.startsWith("//"))
+						continue;
 
-				// Ignore lines that do not have two strings separated by white space.
-				oneLineParts = oneLine.split("\\s+");
-				if (oneLineParts.length != 2)
-					continue;
+					// Ignore lines that do not have two strings separated by white space.
+					oneLineParts = oneLine.split("\\s+");
+					if (oneLineParts.length != 2)
+						continue;
 
-				fileName = oneLineParts[0];
-				serverID = oneLineParts[1];
-				SetFileEntry(fileName, serverID);
-			} while (true);
+					fileName = oneLineParts[0];
+					serverID = oneLineParts[1];
+					SetFileEntry(fileName, serverID);
+
+				} while (true);
+				synchronized (catDirty)
+				{
+					catDirty = false;
+				}
+			}
 		}
 		catch(EOFException eEOF)
 		{
@@ -115,15 +146,52 @@ public class TAFSCatalog
 		}
 	}
 
+	public void WriteEntriesToFile(String inFileName)
+	{
+		PrintWriter	aPW = null;
+
+		try
+		{
+			synchronized (fileCatalog)
+			{
+				aPW = new PrintWriter(new FileOutputStream(inFileName));
+				for (String key : fileCatalog.keySet())
+				{
+					// Get the String value that goes with the key
+					String value = fileCatalog.get(key);
+
+					// Print the key and value
+					aPW.println(key + "\t" + value);
+				}
+				synchronized (catDirty)
+				{
+					catDirty = false;
+				}
+			}
+		}
+		catch (FileNotFoundException eFNF)
+		{
+			log.severe("Exception while trying to create '" + inFileName + "': " + eFNF.getMessage());
+		}
+		finally
+		{
+			if (aPW != null)
+				aPW.close();
+		}
+	}
+
 	public void DisplayEntries()
 	{
-		for (String key : fileCatalog.keySet())
+		synchronized (fileCatalog)
 		{
-			// Get the String value that goes with the key
-			String value = fileCatalog.get(key);
+			for (String key : fileCatalog.keySet())
+			{
+				// Get the String value that goes with the key
+				String value = fileCatalog.get(key);
 
-			// Print the key and value
-			System.out.println(key + "\t" + value);
+				// Print the key and value
+				System.out.println(key + "\t" + value);
+			}
 		}
 	}
 }

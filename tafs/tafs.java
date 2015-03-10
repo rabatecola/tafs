@@ -1,3 +1,5 @@
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -56,7 +58,7 @@ public class tafs
 
 		if (jarFileName.equals("tafscc"))
 			new TAFSCacheCoordinator();
-
+		else
 		if (jarFileName.equals("tafsch"))
 			new TAFSCacheHandler();
 	}

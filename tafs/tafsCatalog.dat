@@ -1,5 +1,2 @@
-# Tab-separated list of file names and IP addresses, one pair per line.
-# This line is a comment.
-// This is also a comment.
-test.txt	127.0.0.1
-test2.txt	192.168.1.12
+test2.txt	10.1.10.15
+test.txt	10.1.10.15

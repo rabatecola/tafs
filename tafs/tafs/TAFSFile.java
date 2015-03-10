@@ -30,8 +30,13 @@ public class TAFSFile
 
 	public TAFSFile(String inFileName, String inCacheServers)
 	{
+		this(inFileName, TAFSGlobalConfig.getString(TAFSOptions.chDataDir), inCacheServers);
+	}
+
+	public TAFSFile(String inFileName, String inFilePath, String inCacheServers)
+	{
 		fileName = inFileName;
-		filePath = TAFSGlobalConfig.getString(TAFSOptions.chDataDir) + fileName;
+		filePath = inFilePath + fileName;
 		myCache = new TAFSCache_SMCD(inCacheServers);
 	}
 
@@ -183,7 +188,7 @@ public class TAFSFile
 			bos.close();
 	}
 
-	// TO DO: Try appending to a buffer until complete, then spin off a thread to store the
+	// TODO: Try appending to a buffer until complete, then spin off a thread to store the
 	// buffer in cache and write it to disk.
 	public void Write(byte[] inBytes, int inCount) throws IOException
 	{

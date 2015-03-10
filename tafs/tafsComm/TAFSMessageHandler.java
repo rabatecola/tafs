@@ -10,10 +10,10 @@ import java.util.ArrayList;
  * @author Mahitha Thokala
  *
  */
+//TODO RA: Rework to use exceptions properly
 public class TAFSMessageHandler
 {
 	TAFSCommHandler	myCH;
-
 
 	public TAFSMessageHandler(TAFSCommHandler inCH)
 	{
@@ -56,5 +56,10 @@ public class TAFSMessageHandler
 		cMessage.myPayload = inPayload;
 
 		SendMessage(cMessage);
+	}
+
+	public String GetRemoteIP()
+	{
+		return myCH != null ? myCH.GetRemoteIP() : "";
 	}
 }

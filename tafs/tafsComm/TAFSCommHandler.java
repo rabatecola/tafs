@@ -18,6 +18,7 @@ import java.util.logging.Logger;
  * @author Mahitha Thokala
  *
  */
+// TODO RA: Rework to use exceptions properly
 public class TAFSCommHandler
 {
 	private final static String	className = TAFSCommHandler.class.getSimpleName();
@@ -32,9 +33,24 @@ public class TAFSCommHandler
 		myPortNumber = inPortNumber;
 	}
 
+	public Integer GetPort()
+	{
+		return myPortNumber;
+	}
+
 	public void SetSocket(Socket inSocket)
 	{
 		mySocket = inSocket;
+	}
+
+	public String GetRemoteIP()
+	{
+		String	resultIP = "";
+
+		if (mySocket != null)
+			resultIP = mySocket.getRemoteSocketAddress().toString();
+
+		return resultIP;
 	}
 
 	public TAFSCommHandler Listen() throws IOException

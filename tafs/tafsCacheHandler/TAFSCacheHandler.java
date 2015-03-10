@@ -6,6 +6,7 @@ package tafsCacheHandler;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import tafs.TAFSGlobalConfig;
@@ -44,23 +45,30 @@ public class TAFSCacheHandler
 		while (true)
 		{
 			// Listen for message
-			log.info(className + "(" + tempCounter + "): Host address is " + InetAddress.getLocalHost().getHostAddress());
-			log.info(className + "(" + tempCounter + "): Waiting for message...");
+			// Listen for message
+			if (log.isLoggable(Level.INFO))
+			{
+				String	logMsg = className + "(" + tempCounter + "): ";
+						logMsg += "Host is " + InetAddress.getLocalHost().getHostAddress();
+						logMsg += ":" + aCommHandler.GetPort() + ".  Waiting for message...";
+
+				log.info(logMsg);
+			}
 			threadCH = aCommHandler.Listen();
 
 			// Spin off thread to handle message
 			log.info(className + ": Received message, executing thread.");
 
-			new TAFSCHThread(threadCH, "Thread for loop #" + tempCounter);
+			new TAFSCHThread(threadCH, "Thread #" + tempCounter);
 
 			// Pause for a second before continuing
 			Thread.sleep(1000);
 
 			tempCounter++;
-			if (tempCounter >= 10)
-				break;
+//			if (tempCounter >= 10)
+//				break;
 		}
 
-		log.info("Exited " + className);
+//		log.info("Exited " + className);
 	}
 }
