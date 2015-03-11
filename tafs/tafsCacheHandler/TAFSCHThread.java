@@ -117,11 +117,12 @@ public class TAFSCHThread implements Runnable
 				log.warning("Unknown command received: " + dummyMsg);
 			}
 
-			Thread.sleep(1350);
+//			Thread.sleep(1350);
 		}
-		catch (InterruptedException eIE)
-		{
-		}
+//		catch (InterruptedException eIE)
+//		{
+//		}
+		finally {}
 
 		myCH.Close();
 	}

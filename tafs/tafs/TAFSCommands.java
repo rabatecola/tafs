@@ -25,7 +25,9 @@ public enum TAFSCommands
 
 	// Responses
 	notok("notok"),
-	ok("ok");
+	ok("ok"),
+
+	bye("bye");
 
 	private final	String cmdStr;
 

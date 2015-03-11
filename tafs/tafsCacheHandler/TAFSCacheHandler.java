@@ -62,7 +62,7 @@ public class TAFSCacheHandler
 			new TAFSCHThread(threadCH, "Thread #" + tempCounter);
 
 			// Pause for a second before continuing
-			Thread.sleep(1000);
+//			Thread.sleep(1000);
 
 			tempCounter++;
 //			if (tempCounter >= 10)

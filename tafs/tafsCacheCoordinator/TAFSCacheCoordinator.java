@@ -51,7 +51,8 @@ public class TAFSCacheCoordinator
 		synchronized(myCat)
 		{
 			myCat.LoadEntriesFromFile(catFile);
-			myCat.DisplayEntries();
+			if (log.isLoggable(Level.FINEST))
+				myCat.DisplayEntries();
 		}
 		log.info("Loaded from catalog file '" + catFile + "'");
 
@@ -80,7 +81,7 @@ public class TAFSCacheCoordinator
 			new TAFSCCThread(threadCH, myCat, "Thread #" + tempCounter);
 
 			// Pause for a second before continuing
-			Thread.sleep(1000);
+//			Thread.sleep(1000);
 
 			tempCounter++;
 //			if (tempCounter >= 10)

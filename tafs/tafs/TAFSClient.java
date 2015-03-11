@@ -13,7 +13,7 @@ import tafsComm.TAFSMessage;
 import tafsComm.TAFSMessageHandler;
 
 /**
- * @author robert
+ * @author Robert Abatecola
  *
  */
 public class TAFSClient
@@ -36,14 +36,14 @@ public class TAFSClient
 		return getFile(inFileName, true);
 	}
 
-	public void putFile(String inFileName, Boolean inUseCache) throws IOException
+	public void putFile(String inSrcFileName, String inDstFileName, Boolean inUseCache) throws IOException
 	{
-		putFileToHost(inFileName, TAFSGlobalConfig.getString(TAFSOptions.ccIP), inUseCache);
+		putFileToHost(inSrcFileName, inDstFileName, TAFSGlobalConfig.getString(TAFSOptions.ccIP), inUseCache);
 	}
 
-	public void putFile(String inFileName) throws IOException
+	public void putFile(String inSrcFileName, String inDstFileName) throws IOException
 	{
-		putFile(inFileName, true);
+		putFile(inSrcFileName, inDstFileName, true);
 	}
 
 	private byte[] getFileFromHost(String inFileName, String inHostIP, Boolean inUseCache)
@@ -116,14 +116,14 @@ public class TAFSClient
 		return resultBytes;
 	}
 
-	private void putFileToHost(String inFileName, String inHostIP, Boolean inUseCache) throws IOException
+	private void putFileToHost(String inSrcFileName, String inDstFileName, String inHostIP, Boolean inUseCache) throws IOException
 	{
-		putFileToHost(inFileName, inHostIP, TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort), inUseCache, false);
+		putFileToHost(inSrcFileName, inDstFileName, inHostIP, TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort), inUseCache, false);
 	}
 
 	// First message should contain null for payload.  Response will contain IP address of host
 	// to which a second message should be sent, this time with the file data in the payload.
-	private void putFileToHost(String inFileName, String inHostIP, Integer inHostPort, Boolean inUseCache, Boolean inWithPayload) throws IOException
+	private void putFileToHost(String inSrcFileName, String inDstFileName, String inHostIP, Integer inHostPort, Boolean inUseCache, Boolean inWithPayload) throws IOException
 	{
 		Integer				listenPort = inHostPort;
 		TAFSCommHandler		theCH = new TAFSCommHandler(listenPort);
@@ -134,7 +134,7 @@ public class TAFSClient
 		String				fileHostIP = "";
 		Integer				fileHostPort = listenPort;
 
-		log.info("Sending put request to " + inHostIP + " for file '" + inFileName + "' with" + (inUseCache ? "" : "out") + " cache");
+		log.info("Sending put request to " + inHostIP + " for file '" + inSrcFileName + "' with" + (inUseCache ? "" : "out") + " cache");
 
 		log.fine("Opening connection to " + inHostIP + ":" + listenPort);
 		theCH.Open(inHostIP);
@@ -143,7 +143,7 @@ public class TAFSClient
 		if (inWithPayload)
 		{
 			// Read the file from storage and attach it to the message.
-			TAFSFile	theFile = new TAFSFile(inFileName, "", "");
+			TAFSFile	theFile = new TAFSFile(inSrcFileName, "", "");
 
 			log.fine("Reading file from storage");
 
@@ -154,7 +154,7 @@ public class TAFSClient
 		else
 			resultBytes = null;
 
-		theArgs.add(inFileName);
+		theArgs.add(inDstFileName);
 		theArgs.add(String.valueOf(resultBytes != null ? resultBytes.length : 0));
 		theArgs.add(inUseCache ? TAFSCommands.cache.getCmdStr() : TAFSCommands.nocache.getCmdStr());
 		log.fine("Sending message to " + inHostIP);
@@ -181,7 +181,7 @@ public class TAFSClient
 			if (fileHostIP.isEmpty())
 				log.severe("Empty host IP received from " + inHostIP);
 			else
-				putFileToHost(inFileName, fileHostIP, fileHostPort, inUseCache, true);
+				putFileToHost(inSrcFileName, inDstFileName, fileHostIP, fileHostPort, inUseCache, true);
 		}
 		else
 		// ok response means that payload was stored successfully on the host

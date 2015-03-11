@@ -138,7 +138,7 @@ public class TAFSCatalog
 		}
 		catch(IOException eIO)
 		{
-			System.out.println("IOException: " + eIO.getMessage());
+			log.severe("IOException: " + eIO.getMessage());
 		}
 		finally
 		{

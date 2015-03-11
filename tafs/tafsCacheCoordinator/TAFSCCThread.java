@@ -50,52 +50,63 @@ public class TAFSCCThread implements Runnable
 		TAFSMessage			aMsg;
 		String				dummyMsg = "GetFilex";
 		TAFSCommands		aCmd;
+		Boolean				keepRunning = true;
 
 		log.info(myMsg);
 
-		try
+		while (keepRunning)
 		{
-			aMH = new TAFSMessageHandler(myCH);
-			aMsg = aMH.ReadMessage();
-
-			dummyMsg = aMsg.myMsg;
 			try
 			{
-				aCmd = TAFSCommands.valueOf(dummyMsg.toLowerCase());
-				switch (aCmd)
+				aMH = new TAFSMessageHandler(myCH);
+				aMsg = aMH.ReadMessage();
+
+				dummyMsg = aMsg.myMsg;
+				try
 				{
-					case getfile:
-						GetFile(aMH, aMsg);
-						break;
-	
-					case putfile:
-						PutFile(aMH, aMsg);
-						break;
-	
-					case addtocat:
-						AddToCat(aMH, aMsg);
-						break;
-	
-					case delfile:
-						DelFile(aMH, aMsg);
-						break;
-	
-					default:
-						log.warning("Unhandled command: " + dummyMsg);
-						break;
+					aCmd = TAFSCommands.valueOf(dummyMsg.toLowerCase());
+					switch (aCmd)
+					{
+						case getfile:
+							GetFile(aMH, aMsg);
+							break;
+
+						case putfile:
+							PutFile(aMH, aMsg);
+							break;
+
+						case addtocat:
+							AddToCat(aMH, aMsg);
+							break;
+
+						case delfile:
+							DelFile(aMH, aMsg);
+							break;
+
+						case bye:
+							keepRunning = false;
+							break;
+
+						default:
+							log.warning("Unhandled command: " + dummyMsg);
+							break;
+					}
 				}
-			}
-			catch(IllegalArgumentException eIA)
-			{
-				log.warning("Unknown command received: " + dummyMsg);
-			}
+				catch(IllegalArgumentException eIA)
+				{
+					log.warning("Unknown command received: " + dummyMsg);
+				}
 
-			Thread.sleep(1350);
-		}
-		catch (InterruptedException eIE)
-		{
-		}
+//				Thread.sleep(1350);
+			}
+//			catch (InterruptedException eIE)
+//			{
+//			}
+			finally {}
 
+			// TEMP?
+			keepRunning = false;
+		}
 		myCH.Close();
 	}
 
@@ -250,7 +261,10 @@ public class TAFSCCThread implements Runnable
 		{
 			myCatalog.SetFileEntry(fileName, hostIP);
 			if (log.isLoggable(Level.FINEST))
+			{
+				log.finest("Current catalog content:");
 				myCatalog.DisplayEntries();
+			}
 		}
 
 		// Notify the requester of the location of the file.

@@ -25,6 +25,7 @@ public class TAFSFile
 	private BufferedOutputStream	bos = null;
 	private Boolean					cacheReads = true;
 	private Boolean					cacheWrites = false;
+	private String					cacheServers = "";
 	private TAFSCache_SMCD			myCache = null;
 	private String					filePath = "";
 
@@ -37,7 +38,8 @@ public class TAFSFile
 	{
 		fileName = inFileName;
 		filePath = inFilePath + fileName;
-		myCache = new TAFSCache_SMCD(inCacheServers);
+		cacheServers = inCacheServers;
+		EnableCache();
 	}
 
 	public Boolean GetCacheReads()
@@ -48,6 +50,7 @@ public class TAFSFile
 	public void SetCacheReads(Boolean inCR)
 	{
 		this.cacheReads = inCR;
+		EnableCache();
 	}
 
 	public Boolean GetCacheWrites()
@@ -58,6 +61,16 @@ public class TAFSFile
 	public void SetCacheWrites(Boolean inCW)
 	{
 		this.cacheWrites = inCW;
+		EnableCache();
+	}
+
+	private void EnableCache()
+	{
+		if (myCache != null)
+			return;
+
+		if (cacheReads || cacheWrites)
+			myCache = new TAFSCache_SMCD(cacheServers);
 	}
 
 	// Get a file from the cache or file system.
@@ -136,11 +149,14 @@ public class TAFSFile
 			{
 				if (fis != null)
 					fis.close();
-				if (bis != null)
-					bis.close();
 			}
 			catch(IOException e)
 			{
+			}
+			finally
+			{
+				if (bis != null)
+					bis.close();
 			}
 		}
 
@@ -150,10 +166,20 @@ public class TAFSFile
 	// Write inFileData to the file system
 	public void WriteFile(byte[] inFileData) throws IOException
 	{
-		OpenForWriting();
-		Write(inFileData, inFileData.length);
-		Flush();
-		Close();
+		try
+		{
+			OpenForWriting();
+			Write(inFileData, inFileData.length);
+			Flush();
+		}
+		catch(IOException eIO)
+		{
+			throw eIO;
+		}
+		finally
+		{
+			Close();
+		}
 	}
 
 	public void OpenForWriting() throws FileNotFoundException, IOException
