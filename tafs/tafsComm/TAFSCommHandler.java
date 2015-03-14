@@ -29,6 +29,9 @@ public class TAFSCommHandler
 	private Socket			mySocket = null;
 	private ServerSocket	myServerSocket = null;
 
+	private ObjectInputStream	myOIS = null;
+	private ObjectOutputStream	myOOS = null;
+
 	public TAFSCommHandler(String inBindAddr, Integer inPortNumber) throws IOException
 	{
 		myPortNumber = inPortNumber;
@@ -64,9 +67,10 @@ public class TAFSCommHandler
 		return myPortNumber;
 	}
 
-	public void SetSocket(Socket inSocket)
+	public void SetSocket(Socket inSocket) throws IOException
 	{
 		mySocket = inSocket;
+		MakeStreams();
 	}
 
 	public String GetRemoteIP()
@@ -168,7 +172,7 @@ public class TAFSCommHandler
 		// Use Socket to create an outgoing connection
 //		try {
 			mySocket = new Socket(inIPAddr, myPortNumber);
-			
+			MakeStreams();
 	
 //		} catch (UnknownHostException e) {
 //			e.printStackTrace();
@@ -177,6 +181,13 @@ public class TAFSCommHandler
 //		}
 	
 		return mySocket;
+	}
+
+	private void MakeStreams() throws IOException
+	{
+		// ObjectOutoutStream must be created first in order to prevent ObjectInputStream from blocking.
+		myOOS = new ObjectOutputStream(mySocket.getOutputStream());
+		myOIS = new ObjectInputStream(mySocket.getInputStream());
 	}
 
 	public void Flush() throws IOException
@@ -207,9 +218,9 @@ public class TAFSCommHandler
 
 //			try{
 
-		    		ObjectInputStream ois = 
-		                     new ObjectInputStream(mySocket.getInputStream());
-		    		anObject = ois.readObject();
+//		    		ObjectInputStream ois = 
+//		                     new ObjectInputStream(mySocket.getInputStream());
+		    		anObject = myOIS.readObject();
 //                    ois.close();
 		    		log.finest("deserialized");
 
@@ -229,11 +240,11 @@ public class TAFSCommHandler
 //		TAFSMessage bMessage = new TAFSMessage();	
 		
 //		try{
-			ObjectOutputStream  oos = new 
-                    ObjectOutputStream(mySocket.getOutputStream());
+//			ObjectOutputStream  oos = new 
+//                    ObjectOutputStream(mySocket.getOutputStream());
 
 			
-  		       oos.writeObject(inObject);
+  		       myOOS.writeObject(inObject);
 			
 
 //			oos.close();

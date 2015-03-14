@@ -220,18 +220,11 @@ public class TAFSCCThread implements Runnable
 		try
 		{
 			inRequesterMH.SendMessage(outMsg);
-			response = inRequesterMH.ReadMessage();
-			log.fine("Response from requester: " + response.myMsg);
 		}
 		catch(IOException eIO)
 		{
 			log.severe("Could not read or send message: " + eIO.getMessage());
 			eIO.printStackTrace();
-		}
-		catch(ClassNotFoundException eCNF)
-		{
-			log.severe("Could not read or send message: " + eCNF.getMessage());
-			eCNF.printStackTrace();
 		}
 	}
 
@@ -247,7 +240,6 @@ public class TAFSCCThread implements Runnable
 //		String				fileSizeStr;
 //		Boolean				useCache = true;
 		String				hostIP;
-		TAFSMessage			response;
 		TAFSMessage			outMsg = new TAFSMessage();
 //		TAFSCommHandler		hostCH;
 //		TAFSMessageHandler	hostMH;
@@ -295,18 +287,11 @@ public class TAFSCCThread implements Runnable
 		try
 		{
 			inRequesterMH.SendMessage(outMsg);
-			response = inRequesterMH.ReadMessage();
-			log.fine("Response from requester: " + response.myMsg);
 		}
 		catch(IOException eIO)
 		{
-			log.severe("Could not read or send message: " + eIO.getMessage());
+			log.severe("Could not send message: " + eIO.getMessage());
 			eIO.printStackTrace();
-		}
-		catch(ClassNotFoundException eCNF)
-		{
-			log.severe("Could not read or send message: " + eCNF.getMessage());
-			eCNF.printStackTrace();
 		}
 	}
 
