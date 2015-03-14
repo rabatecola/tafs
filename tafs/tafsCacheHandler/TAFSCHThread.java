@@ -4,7 +4,6 @@
 package tafsCacheHandler;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
@@ -43,8 +42,8 @@ public class TAFSCHThread implements Runnable
 		{
 			TAFSFile	theFile;
 
-			log.info("FileCachingThread running");
-			theFile = new TAFSFile(myFileName, TAFSGlobalConfig.getString(TAFSOptions.cacheServers));
+			log.fine("FileCachingThread running");
+			theFile = new TAFSFile(myFileName);
 			try
 			{
 				theFile.GetFile();
@@ -69,12 +68,12 @@ public class TAFSCHThread implements Runnable
 
 	public void run()
 	{
-		TAFSMessageHandler	aMH;
+		TAFSMessageHandler	aMH = null;
 		TAFSMessage			aMsg;
-		String				dummyMsg = "GetFile";
+		String				dummyMsg = "";
 		TAFSCommands		aCmd;
 
-		log.info("\n" + myMsg + " - ");
+		log.fine("\n" + myMsg + " - ");
 
 		try
 		{
@@ -122,9 +121,29 @@ public class TAFSCHThread implements Runnable
 //		catch (InterruptedException eIE)
 //		{
 //		}
-		finally {}
-
-		myCH.Close();
+		catch (IOException eIO)
+		{
+			log.severe("Could not read message: " + eIO.getMessage());
+			eIO.printStackTrace();
+		}
+		catch (ClassNotFoundException eCNF)
+		{
+			log.severe("Could not read message: " + eCNF.getMessage());
+			eCNF.printStackTrace();
+		}
+		finally
+		{
+			// Rely on the client to close the connection
+			//if (aMH != null)
+				//aMH.Close();
+			// Decrement active thread count.
+			try
+			{
+				TAFSCacheHandler.activeThreads.acquire();
+				TAFSCacheHandler.maxThreads.release();
+			}
+			catch(InterruptedException eI) { /* Ignore */ }
+		}
 	}
 
 	// Message format:
@@ -139,7 +158,7 @@ public class TAFSCHThread implements Runnable
 		Boolean		useCache = true;
 		TAFSMessage	outMsg = new TAFSMessage();
 
-		log.info("PrepSendFile called, file name = '" + fileName + "'");
+		log.fine("PrepSendFile called, file name = '" + fileName + "'");
 
 		if (inMsg.myArgs.size() > 1)
 			useCache = inMsg.myArgs.get(1) != "nocache";
@@ -156,8 +175,16 @@ public class TAFSCHThread implements Runnable
 		outMsg.myMsg = TAFSCommands.ok.getCmdStr();
 
 		// Notify the requester of the outcome.
-		log.info("Notifying requester of result");
-		inRequesterMH.SendMessage(outMsg);
+		log.fine("Notifying requester of result");
+		try
+		{
+			inRequesterMH.SendMessage(outMsg);
+		}
+		catch (IOException eIO)
+		{
+			log.severe("Could not send message: " + eIO.getMessage());
+			eIO.printStackTrace();
+		}
 	}
 
 	// Message format:
@@ -177,12 +204,12 @@ public class TAFSCHThread implements Runnable
 
 		// Find the file in the catalog.
 		fileName = inMsg.myArgs.get(0);
-		log.info("GetFile called, file name = '" + fileName + "'");
+		log.fine("GetFile called, file name = '" + fileName + "'");
 
 		if (inMsg.myArgs.size() > 1)
 			useCache = inMsg.myArgs.get(1).equals(TAFSCommands.cache.getCmdStr());
 
-		theFile = new TAFSFile(fileName, TAFSGlobalConfig.getString(TAFSOptions.cacheServers));
+		theFile = new TAFSFile(fileName);
 		theFile.SetCacheReads(useCache);
 		try
 		{
@@ -199,10 +226,31 @@ public class TAFSCHThread implements Runnable
 		}
 
 		// Notify the requester of the result.
-		log.info("Notifying requester of result");
-		inRequesterMH.SendMessage(outMsg);
-		response = inRequesterMH.ReadMessage();
-		log.info("Response from requester: " + response.myMsg);
+		log.fine("Notifying requester of result");
+		try
+		{
+			inRequesterMH.SendMessage(outMsg);
+			try
+			{
+				response = inRequesterMH.ReadMessage();
+				log.fine("Response from requester: " + response.myMsg);
+			}
+			catch (IOException eIO)
+			{
+				log.severe("Could not receive message: " + eIO.getMessage());
+				eIO.printStackTrace();
+			}
+			catch (ClassNotFoundException eCNF)
+			{
+				log.severe("Could not receive message: " + eCNF.getMessage());
+				eCNF.printStackTrace();
+			}
+		}
+		catch (IOException eIO)
+		{
+			log.severe("Could not send message: " + eIO.getMessage());
+			eIO.printStackTrace();
+		}
 	}
 
 	// Message format:
@@ -218,7 +266,7 @@ public class TAFSCHThread implements Runnable
 		Boolean		useCache = true;
 		TAFSMessage	outMsg = new TAFSMessage();
 
-		log.info("PrepRecvFile called, file name = '" + fileName + "'");
+		log.fine("PrepRecvFile called, file name = '" + fileName + "'");
 
 		if (inMsg.myArgs.size() > 1)
 			useCache = inMsg.myArgs.get(1) != "nocache";
@@ -235,8 +283,16 @@ public class TAFSCHThread implements Runnable
 		outMsg.myMsg = TAFSCommands.ok.getCmdStr();
 
 		// Notify the requester of the outcome.
-		log.info("Notifying requester of result");
-		inRequesterMH.SendMessage(outMsg);
+		log.fine("Notifying requester of result");
+		try
+		{
+			inRequesterMH.SendMessage(outMsg);
+		}
+		catch (IOException eIO)
+		{
+			log.severe("Could not send message: " + eIO.getMessage());
+			eIO.printStackTrace();
+		}
 	}
 
 	// Message format:
@@ -259,7 +315,7 @@ public class TAFSCHThread implements Runnable
 
 		// Find the file in the catalog.
 		fileName = inMsg.myArgs.get(0);
-		log.info("PutFile called, file name = '" + fileName + "'");
+		log.fine("PutFile called, file name = '" + fileName + "'");
 
 		if (inMsg.myArgs.size() > 1)
 			useCache = inMsg.myArgs.get(1).equals(TAFSCommands.cache.getCmdStr());
@@ -267,7 +323,7 @@ public class TAFSCHThread implements Runnable
 		// Write the file to storage
 //		WriteFile(fileName, inMsg.myPayload);
 
-		theFile = new TAFSFile(fileName, TAFSGlobalConfig.getString(TAFSOptions.cacheServers));
+		theFile = new TAFSFile(fileName);
 		theFile.SetCacheWrites(useCache);
 
 		try
@@ -285,47 +341,103 @@ public class TAFSCHThread implements Runnable
 		}
 
 		// Notify the requester of the result.
-		log.info("Notifying requester of result");
-		inRequesterMH.SendMessage(outMsg);
-		response = inRequesterMH.ReadMessage();
-		log.info("Response from requester: " + response.myMsg);
+		log.fine("Notifying requester of result");
+		try
+		{
+			inRequesterMH.SendMessage(outMsg);
+
+			try
+			{
+				response = inRequesterMH.ReadMessage();
+				log.fine("Response from requester: " + response.myMsg);
+			}
+			catch (IOException eIO)
+			{
+				log.severe("Could not receive message: " + eIO.getMessage());
+				eIO.printStackTrace();
+			}
+			catch (ClassNotFoundException eCNF)
+			{
+				log.severe("Could not receive message: " + eCNF.getMessage());
+				eCNF.printStackTrace();
+			}
+		}
+		catch (IOException eIO)
+		{
+			log.severe("Could not send message: " + eIO.getMessage());
+			eIO.printStackTrace();
+		}
 
 		// Notify the Cache Coordinator of the newly received file.
 		if (writeSuccess)
 		{
 			TAFSCommHandler		ccCH = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort));
-			TAFSMessageHandler	ccMH;
+			TAFSMessageHandler	ccMH = null;
 
-			log.info("Notifying coordinator of newly received file");
+			log.fine("Notifying coordinator of newly received file");
 
-			// TODO Rework to use exceptions properly
 			ccCH = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort));
-			ccCH.Open(TAFSGlobalConfig.getString(TAFSOptions.ccIP));
-			ccMH = new TAFSMessageHandler(ccCH);
-
-			outMsg = new TAFSMessage();
-			outMsg.myMsg = TAFSCommands.addtocat.getCmdStr();
-			outMsg.myArgs.add(fileName);
 			try
 			{
-				outMsg.myArgs.add(InetAddress.getLocalHost().getHostAddress());
+				ccCH.Open(TAFSGlobalConfig.getString(TAFSOptions.ccIP));
+				ccMH = new TAFSMessageHandler(ccCH);
+
+				outMsg = new TAFSMessage();
+				outMsg.myMsg = TAFSCommands.addtocat.getCmdStr();
+				outMsg.myArgs.add(fileName);
+//				try
+//				{
+					outMsg.myArgs.add(ccCH.GetLocalIP());
+//				}
+//				catch(UnknownHostException eUH)
+//				{
+//					// If this happens, Cache Coordinator will use IP address on the connection
+//					log.warning("Could not get my IP address: " + eUH.getMessage());
+//				}
+
+				ccMH.SendMessage(outMsg);
+				try
+				{
+					response = ccMH.ReadMessage();
+					log.fine("Response from coordinator: " + response.myMsg);
+				}
+				catch (IOException eIO)
+				{
+					if (eIO.getMessage().equalsIgnoreCase("Connection reset"))
+					{
+						log.warning("Could not receive message: " + eIO.getMessage());
+					}
+					else
+					{
+						log.severe("Could not receive message: " + eIO.getMessage());
+						eIO.printStackTrace();
+					}
+				}
+				catch (ClassNotFoundException eCNF)
+				{
+					log.severe("Could not receive message: " + eCNF.getMessage());
+					eCNF.printStackTrace();
+				}
 			}
-			catch(UnknownHostException eUH)
+			catch (UnknownHostException eUH)
 			{
-				// If this happens, Cache Coordinator will use IP address on the connection
-				log.warning("Could not get my IP address: " + eUH.getMessage());
+				log.severe("Could not open connection to coordinator: " + eUH.getMessage());
+				eUH.printStackTrace();
 			}
-
-			ccMH.SendMessage(outMsg);
-			response = ccMH.ReadMessage();
-			log.info("Response from coordinator: " + response.myMsg);
-
-			ccCH.Close();
+			catch (IOException eIO)
+			{
+				log.severe("Could not open connection to coordinator: " + eIO.getMessage());
+				eIO.printStackTrace();
+			}
+			finally
+			{
+				ccMH.Close();
+			}
 		}
 	}
 
 	private void DelFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
 	{
-		log.info("DelFile called");
+		log.fine("DelFile called");
 	}
 }

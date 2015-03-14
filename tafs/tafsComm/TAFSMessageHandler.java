@@ -13,7 +13,7 @@ import java.util.ArrayList;
 //TODO RA: Rework to use exceptions properly
 public class TAFSMessageHandler
 {
-	TAFSCommHandler	myCH;
+	private TAFSCommHandler	myCH;
 
 	public TAFSMessageHandler(TAFSCommHandler inCH)
 	{
@@ -21,33 +21,39 @@ public class TAFSMessageHandler
 		myCH = inCH;
 	}
 
-	public TAFSMessage ReadMessage()
+	public void Close()
+	{
+		myCH.Close();
+	}
+
+	public TAFSMessage ReadMessage() throws IOException, ClassNotFoundException
 	{
 		TAFSMessage	aMsg = null;
 
 		// Reads a message object from CommHandler.
-		try {
+//		try {
 			aMsg = (TAFSMessage)myCH.ReadObject();
-		} catch (IOException e) {
+//		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//			e.printStackTrace();
+//		}
 
 		return aMsg;
 	}
 
-	public void SendMessage(TAFSMessage inMsg)
+	public void SendMessage(TAFSMessage inMsg) throws IOException
 	{
 		// Writes a message object to CommHandler.
-		try {
+//		try {
 			myCH.WriteObject(inMsg);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			myCH.Flush();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 
-	public void SendMessage(String inMsg, ArrayList<String> inArgs, byte[] inPayload)
+	public void SendMessage(String inMsg, ArrayList<String> inArgs, byte[] inPayload) throws IOException
 	{
 		TAFSMessage	cMessage = new TAFSMessage();
 

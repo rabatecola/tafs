@@ -19,7 +19,20 @@ public enum TAFSOptions
 	ccIP("ccIP"),
 	chIP("chIP"),
 	chDataDir("chDataDir"),
-	catSaveInterval("catSaveInterval");
+	catSaveInterval("catSaveInterval"),
+	ccThreadLimit("ccThreadLimit"),
+	chThreadLimit("chThreadLimit"),
+	ccLogLevel("ccLogLevel"),
+	chLogLevel("chLogLevel"),
+	ccBindAddr("ccBindAddr"),
+	chBindAddr("chBindAddr"),
+	clientLogLevel("clientLogLevel"),
+	clientThreadLimit("clientThreadLimit"),
+	clientFileCount("clientFileCount"),
+	clientLoopCount("clientLoopCount"),
+	clientGenerateTestFiles("clientGenerateTestFiles"),
+	clientRunReadTests("clientRunReadTests"),
+	clientRunWriteTests("clientRunWriteTests");
 
 	private final	String optStr;
 

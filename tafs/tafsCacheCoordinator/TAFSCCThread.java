@@ -5,11 +5,11 @@ package tafsCacheCoordinator;
 
 //import java.net.Socket;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import tafs.TAFSCatalog;
 import tafs.TAFSCommands;
 import tafs.TAFSGlobalConfig;
 import tafs.TAFSOptions;
@@ -46,19 +46,20 @@ public class TAFSCCThread implements Runnable
 
 	public void run()
 	{
-		TAFSMessageHandler	aMH;
+		TAFSMessageHandler	aMH = null;
 		TAFSMessage			aMsg;
-		String				dummyMsg = "GetFilex";
+		String				dummyMsg = "";
 		TAFSCommands		aCmd;
 		Boolean				keepRunning = true;
 
-		log.info(myMsg);
+		log.fine(myMsg);
+
+		aMH = new TAFSMessageHandler(myCH);
 
 		while (keepRunning)
 		{
 			try
 			{
-				aMH = new TAFSMessageHandler(myCH);
 				aMsg = aMH.ReadMessage();
 
 				dummyMsg = aMsg.myMsg;
@@ -102,12 +103,29 @@ public class TAFSCCThread implements Runnable
 //			catch (InterruptedException eIE)
 //			{
 //			}
-			finally {}
-
-			// TEMP?
-			keepRunning = false;
+			catch(IOException eIO)
+			{
+				
+			}
+			catch(ClassNotFoundException eCNF)
+			{
+				
+			}
+			finally
+			{
+				// TEMP?
+				keepRunning = false;
+			}
 		}
-		myCH.Close();
+		// Rely on the client to close the connection
+		//aMH.Close();
+		// Decrement active thread count.
+		try
+		{
+			TAFSCacheCoordinator.activeThreads.acquire();
+			TAFSCacheCoordinator.maxThreads.release();
+		}
+		catch(InterruptedException eI) { /* Ignore */ }
 	}
 
 	// Message format:
@@ -117,15 +135,15 @@ public class TAFSCCThread implements Runnable
 	//	   notok <exception message>
 	private void GetFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
 	{
-		String				fileName;
+		String				fileName = "";
 		Boolean				useCache = true;
-		String				hostIP;
-		TAFSMessage			response;
+		String				hostIP = "";
+		TAFSMessage			response = null;
 		TAFSMessage			outMsg = new TAFSMessage();
-		TAFSCommHandler		hostCH;
-		TAFSMessageHandler	hostMH;
+		TAFSCommHandler		hostCH = null;
+		TAFSMessageHandler	hostMH = null;
 
-		log.info("GetFile called");
+		log.fine("GetFile called");
 
 		// Find the file in the catalog.
 		fileName = inMsg.myArgs.get(0);
@@ -136,39 +154,85 @@ public class TAFSCCThread implements Runnable
 			hostIP = myCatalog.GetFileEntryServerID(fileName);
 		}
 
-		log.info("File name: '" + fileName + "'");
+		log.fine("File name: '" + fileName + "'");
 
 		// If caching, notify the file's host of the impending request.
 		// TODO consider sending this request in a separate thread
-		if (useCache)
+		if (useCache && hostIP != null)
 		{
 			outMsg.myMsg = TAFSCommands.prepsendfile.getCmdStr();
 			outMsg.myArgs.add(fileName);
 
 			// Connect on cache handler's port
-			log.info("Connecting to cache handler");
+			log.fine("Connecting to cache handler at " + hostIP);
 			hostCH = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.chListenPort));
-			hostCH.Open(hostIP);
-			hostMH = new TAFSMessageHandler(hostCH);
+			try
+			{
+				hostCH.Open(hostIP);
+				hostMH = new TAFSMessageHandler(hostCH);
 
-			hostMH.SendMessage(outMsg);
+				hostMH.SendMessage(outMsg);
 
-			response = hostMH.ReadMessage();
-			log.info("Response from host: " + response.myMsg);
-
-			hostCH.Close();
+				response = hostMH.ReadMessage();
+				log.fine("Response from host: " + response.myMsg);
+			}
+			catch(IOException eIO)
+			{
+				if (eIO.getMessage().equalsIgnoreCase("Connection reset"))
+				{
+					log.warning("Could not receive message: " + eIO.getMessage());
+				}
+				else
+				{
+					log.severe("Could not receive message: " + eIO.getMessage());
+					eIO.printStackTrace();
+				}
+			}
+			catch(ClassNotFoundException eCNF)
+			{
+				log.severe("Could not read or send message: " + eCNF.getMessage());
+				eCNF.printStackTrace();
+			}
+			finally
+			{
+				if (hostMH != null)
+					hostMH.Close();
+			}
 		}
 
-		// Notify the requester of the location of the file.
-		log.info("Notifying requester of file location " + hostIP);
-		outMsg.myMsg = TAFSCommands.useloc.getCmdStr();
-		outMsg.myArgs.clear();
-		outMsg.myArgs.add(hostIP);
-		outMsg.myArgs.add(TAFSGlobalConfig.getString(TAFSOptions.chListenPort));
+		// Notify the requester of the location of the file if it was found in the catalog.
+		if (hostIP != null)
+		{
+			log.fine("Notifying requester of file location " + hostIP);
+			outMsg.myMsg = TAFSCommands.useloc.getCmdStr();
+			outMsg.myArgs.clear();
+			outMsg.myArgs.add(hostIP);
+			outMsg.myArgs.add(TAFSGlobalConfig.getString(TAFSOptions.chListenPort));
+		}
+		else
+		{
+			log.fine("File not found in catalog.  Notifying requester.");
+			outMsg.myMsg = TAFSCommands.notok.getCmdStr();
+			outMsg.myArgs.clear();
+			outMsg.myArgs.add("File not found in catalog");
+		}
 
-		inRequesterMH.SendMessage(outMsg);
-		response = inRequesterMH.ReadMessage();
-		log.info("Response from requester: " + response.myMsg);
+		try
+		{
+			inRequesterMH.SendMessage(outMsg);
+			response = inRequesterMH.ReadMessage();
+			log.fine("Response from requester: " + response.myMsg);
+		}
+		catch(IOException eIO)
+		{
+			log.severe("Could not read or send message: " + eIO.getMessage());
+			eIO.printStackTrace();
+		}
+		catch(ClassNotFoundException eCNF)
+		{
+			log.severe("Could not read or send message: " + eCNF.getMessage());
+			eCNF.printStackTrace();
+		}
 	}
 
 	// Message format:
@@ -188,11 +252,11 @@ public class TAFSCCThread implements Runnable
 //		TAFSCommHandler		hostCH;
 //		TAFSMessageHandler	hostMH;
 
-		log.info("PutFile called");
+		log.fine("PutFile called");
 
 		// Find the file in the catalog.
 		fileName = inMsg.myArgs.get(0);
-		log.info("File name: '" + fileName + "'");
+		log.fine("File name: '" + fileName + "'");
 
 //		if (inMsg.myArgs.size() > 1)
 //		{
@@ -219,18 +283,31 @@ public class TAFSCCThread implements Runnable
 			}
 		}
 		else
-			log.info("File already present on " + hostIP);
+			log.fine("File already present on " + hostIP);
 
 		// Notify the requester of the location of the file.
-		log.info("Notifying requester of file location " + hostIP);
+		log.fine("Notifying requester of file location " + hostIP);
 		outMsg.myMsg = TAFSCommands.useloc.getCmdStr();
 		outMsg.myArgs.clear();
 		outMsg.myArgs.add(hostIP);
 		outMsg.myArgs.add(TAFSGlobalConfig.getString(TAFSOptions.chListenPort));
 
-		inRequesterMH.SendMessage(outMsg);
-		response = inRequesterMH.ReadMessage();
-		log.info("Response from requester: " + response.myMsg);
+		try
+		{
+			inRequesterMH.SendMessage(outMsg);
+			response = inRequesterMH.ReadMessage();
+			log.fine("Response from requester: " + response.myMsg);
+		}
+		catch(IOException eIO)
+		{
+			log.severe("Could not read or send message: " + eIO.getMessage());
+			eIO.printStackTrace();
+		}
+		catch(ClassNotFoundException eCNF)
+		{
+			log.severe("Could not read or send message: " + eCNF.getMessage());
+			eCNF.printStackTrace();
+		}
 	}
 
 	// Message format:
@@ -245,7 +322,7 @@ public class TAFSCCThread implements Runnable
 		String				hostIP = "<error in host IP>";
 		TAFSMessage			outMsg = new TAFSMessage();
 
-		log.info("AddToCat called");
+		log.fine("AddToCat called");
 
 		fileName = inMsg.myArgs.get(0);
 		if (inMsg.myArgs.size() > 1)
@@ -255,7 +332,7 @@ public class TAFSCCThread implements Runnable
 			hostIP = inRequesterMH.GetRemoteIP();
 		}
 
-		log.info("File name: '" + fileName + "', host IP: " + hostIP);
+		log.fine("File name: '" + fileName + "', host IP: " + hostIP);
 
 		synchronized(myCatalog)
 		{
@@ -268,14 +345,22 @@ public class TAFSCCThread implements Runnable
 		}
 
 		// Notify the requester of the location of the file.
-		log.info("Notifying requester of result");
+		log.fine("Notifying requester of result");
 		outMsg.myMsg = TAFSCommands.ok.getCmdStr();
 
-		inRequesterMH.SendMessage(outMsg);
+		try
+		{
+			inRequesterMH.SendMessage(outMsg);
+		}
+		catch(IOException eIO)
+		{
+			log.severe("Could not send message: " + eIO.getMessage());
+			eIO.printStackTrace();
+		}
 	}
 
 	private void DelFile(TAFSMessageHandler inRequesterMH, TAFSMessage inMsg)
 	{
-		log.info("DelFile called");
+		log.fine("DelFile called");
 	}
 }

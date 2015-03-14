@@ -15,7 +15,7 @@ import tafs.TAFSOptions;
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.MemcachedClient;
 
-public class TAFSCache_SMCD implements TAFSCacheInterface
+public final class TAFSCache_SMCD implements TAFSCacheInterface
 {
 	// =============+=============+=============+=============+=============
 	// Begin: Cache-related private members
@@ -25,41 +25,63 @@ public class TAFSCache_SMCD implements TAFSCacheInterface
 	private final static Logger log = Logger.getLogger(className);
 
 	// Cache-related member variables
-	private MemcachedClient	cache = null;
-	private String			cacheServers = "";
-	private int				cacheConnectCount = 0;
+	private static MemcachedClient	cache = null;
+//	private static String			cacheServers = "";
+	private static int				cacheConnectCount = 0;
 
-	public TAFSCache_SMCD(String inCacheServers)
-	{
-		cacheServers = inCacheServers;
-	}
+//	public static void SetCacheServers(String inCacheServers)
+//	{
+//		cacheServers = inCacheServers;
+//	}
 
-	public void ConnectCache() throws IOException
+	/**
+	 * Call CreateCacheClient only one time in a program that uses this class.
+	 * 
+	 * @throws IOException
+	 */
+	public static void CreateCacheClient(String inCacheServers) throws IOException
 	{
 		if (cache == null)
-			cache = new MemcachedClient(AddrUtil.getAddresses(cacheServers));
+			cache = new MemcachedClient(AddrUtil.getAddresses(inCacheServers));
+	}
+
+	public static void DestroyCacheClient()
+	{
+		if (cache != null)
+			cache.shutdown();
+	}
+
+	/**
+	 * 
+	 * @throws IOException
+	 */
+	public static void ConnectCache() throws IOException
+	{
 		cacheConnectCount++;
 	}
 
-	public void DisconnectCache()
+	public static void DisconnectCache()
 	{
-		if ((cache != null) && (cacheConnectCount == 1))
-		{
-			cache.shutdown();
-			cache = null;
-		}
+//		if ((cache != null) && (cacheConnectCount == 1))
+//		{
+//			cache.shutdown();
+//			cache = null;
+//		}
 
 		if (cacheConnectCount > 0)
 			cacheConnectCount--;
 	}
 
-	public byte[] GetFileFromCache(String inFileName)
+	public static byte[] GetFileFromCache(String inFileName)
 	{
-		return (byte[])cache.get(inFileName);
+		return cache != null ? (byte[])cache.get(inFileName) : null;
 	}
 
-	public void PutFileInCache(String inFileName, byte[] inFileBytes)
+	public static void PutFileInCache(String inFileName, byte[] inFileBytes)
 	{
+		if (cache == null)
+			return;
+
 		try
 		{
 			Future<Boolean>	myResult = cache.set(inFileName, TAFSGlobalConfig.getInteger(TAFSOptions.memcachedTTL), inFileBytes);

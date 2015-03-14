@@ -25,21 +25,22 @@ public class TAFSFile
 	private BufferedOutputStream	bos = null;
 	private Boolean					cacheReads = true;
 	private Boolean					cacheWrites = false;
-	private String					cacheServers = "";
-	private TAFSCache_SMCD			myCache = null;
+//	private String					cacheServers = "";
+//	private TAFSCache_SMCD			myCache = null;
 	private String					filePath = "";
+//	private Boolean					ownCache = true;
 
-	public TAFSFile(String inFileName, String inCacheServers)
+	public TAFSFile(String inFileName/*, String inCacheServers*/)
 	{
-		this(inFileName, TAFSGlobalConfig.getString(TAFSOptions.chDataDir), inCacheServers);
+		this(inFileName, TAFSGlobalConfig.getString(TAFSOptions.chDataDir)/*, inCacheServers*/);
 	}
 
-	public TAFSFile(String inFileName, String inFilePath, String inCacheServers)
+	public TAFSFile(String inFileName, String inFilePath/*, String inCacheServers*/)
 	{
 		fileName = inFileName;
 		filePath = inFilePath + fileName;
-		cacheServers = inCacheServers;
-		EnableCache();
+//		cacheServers = inCacheServers;
+//		EnableCache();
 	}
 
 	public Boolean GetCacheReads()
@@ -50,7 +51,7 @@ public class TAFSFile
 	public void SetCacheReads(Boolean inCR)
 	{
 		this.cacheReads = inCR;
-		EnableCache();
+//		EnableCache();
 	}
 
 	public Boolean GetCacheWrites()
@@ -61,18 +62,29 @@ public class TAFSFile
 	public void SetCacheWrites(Boolean inCW)
 	{
 		this.cacheWrites = inCW;
-		EnableCache();
+//		EnableCache();
 	}
 
-	private void EnableCache()
-	{
-		if (myCache != null)
-			return;
+//	public void SetExternalCache(TAFSCache_SMCD inCache)
+//	{
+//		if (inCache != null)
+//		{
+//			myCache = inCache;
+//			ownCache = false;
+//		}
+//		else
+//			ownCache = true;
+//	}
 
-		if (cacheReads || cacheWrites)
-			myCache = new TAFSCache_SMCD(cacheServers);
-	}
-
+//	private void EnableCache() throws IOException
+//	{
+//		if (TAFSCache_SMCD != null)
+//			return;
+//
+//		if (cacheReads || cacheWrites)
+//			TAFSCache_SMCD = new TAFSCache_SMCD(cacheServers);
+//	}
+//
 	// Get a file from the cache or file system.
 	public byte[] GetFile() throws IOException, IllegalStateException
 	{
@@ -80,24 +92,25 @@ public class TAFSFile
 
 		if (cacheReads)
 		{
-			myCache.ConnectCache();
+//			if (ownCache)
+				TAFSCache_SMCD.ConnectCache();
 
-			fileByteArray = myCache.GetFileFromCache(fileName);
+			fileByteArray = TAFSCache_SMCD.GetFileFromCache(fileName);
 			if (fileByteArray != null)
-				log.info("Cache HIT: file found in cache.");
+				log.fine("Cache HIT: file found in cache.");
 			else
-				log.info("Cache MISS: file not found in cache.  Reading it into memory.");
+				log.fine("Cache MISS: file not found in cache.  Reading it into memory.");
 		}
 
 		if (fileByteArray == null)
 		{
 			fileByteArray = ReadFile();
 			if (cacheReads && (fileByteArray != null))
-				myCache.PutFileInCache(fileName, fileByteArray);
+				TAFSCache_SMCD.PutFileInCache(fileName, fileByteArray);
 		}
 
-		if (cacheReads)
-			myCache.DisconnectCache();
+		if (cacheReads /*&& ownCache*/)
+			TAFSCache_SMCD.DisconnectCache();
 
 		return fileByteArray;
 	}
@@ -131,7 +144,7 @@ public class TAFSFile
 				count = bis.read(fileByteArray);
 				if (count == -1 || count == length)
 				{
-					log.info("\tFile read to end: " + filePath);
+					log.fine("\tFile read to end: " + filePath);
 				}
 			}
 		}
@@ -186,7 +199,8 @@ public class TAFSFile
 	{
 		if (cacheWrites)
 		{
-			myCache.ConnectCache();
+//			if (ownCache)
+//				TAFSCache_SMCD.ConnectCache();
 			writeByteArray = new byte[0];
 		}
 
@@ -198,7 +212,7 @@ public class TAFSFile
 		if (cacheWrites)
 		{
 			WriteNoCache(writeByteArray, writeByteArray.length);
-			myCache.PutFileInCache(fileName, writeByteArray);
+			TAFSCache_SMCD.PutFileInCache(fileName, writeByteArray);
 		}
 
 		if (bos != null)
@@ -207,8 +221,8 @@ public class TAFSFile
 
 	public void Close() throws IOException
 	{
-		if (cacheWrites)
-			myCache.DisconnectCache();
+//		if (cacheWrites && ownCache)
+//			TAFSCache_SMCD.DisconnectCache();
 
 		if (bos != null)
 			bos.close();

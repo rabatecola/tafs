@@ -46,6 +46,32 @@ public class TAFSGlobalConfig
 //	private static final String		ccIP = "192.168.97.43";
 //	private static final String[]	chIP = { "192.168.97.47", "192.168.97.48" };
 
+	public static void SetLoggingLevel(Logger inLogger, Level inLevel)
+	{
+		inLogger.setLevel(inLevel);
+		inLogger.getHandlers();
+		inLogger.setUseParentHandlers(false);
+	    for (Handler handler : inLogger.getHandlers())
+	    {
+            // Set level in the console handler
+	        if (handler instanceof ConsoleHandler)
+	        {
+	        	MyFormatter	newFormatter = new MyFormatter();
+
+	        	((ConsoleHandler)handler).setLevel(inLevel);
+	        	handler.setFormatter(newFormatter);
+	            break;
+	        }
+	    }
+	}
+
+	public static void SetLoggingLevel(Level inLevel)
+	{
+		Logger	theLogger = Logger.getLogger("");
+
+		SetLoggingLevel(theLogger, inLevel);
+	}
+
 	public static void SetLoggingLevel(String inLoggerName)
 	{
 		Level	theLevel;
@@ -60,20 +86,7 @@ public class TAFSGlobalConfig
 			theLevel = defaultLogLevel;
 		}
 
-		theLogger.setLevel(theLevel);
-		theLogger.getHandlers();
-	    for (Handler handler : theLogger.getHandlers())
-	    {
-            // Set level in the console handler
-	        if (handler instanceof ConsoleHandler)
-	        {
-	        	MyFormatter	newFormatter = new MyFormatter();
-
-	        	((ConsoleHandler)handler).setLevel(theLevel);
-	        	handler.setFormatter(newFormatter);
-	            break;
-	        }
-	    }
+		SetLoggingLevel(theLogger, theLevel);
 	}
 
 	public static String getString(TAFSOptions inOption)
@@ -99,6 +112,11 @@ public class TAFSGlobalConfig
 	public static Level getLevel(TAFSOptions inOption)
 	{
 		return Level.parse(getString(inOption));
+	}
+
+	public static Boolean getBoolean(TAFSOptions inOption)
+	{
+		return (getString(inOption).equals("true"));
 	}
 
 	public static void LoadConfigFromFile() throws FileNotFoundException, IOException

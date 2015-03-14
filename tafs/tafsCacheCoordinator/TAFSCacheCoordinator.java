@@ -6,11 +6,10 @@ package tafsCacheCoordinator;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetAddress;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import tafs.TAFSCatalog;
 import tafs.TAFSGlobalConfig;
 import tafs.TAFSOptions;
 import tafsComm.TAFSCommHandler;
@@ -22,9 +21,13 @@ import tafsComm.TAFSCommHandler;
 public class TAFSCacheCoordinator
 {
 	private final static String	className = TAFSCacheCoordinator.class.getSimpleName();
-	private final static Logger log = Logger.getLogger(className);
+	private static Logger log = Logger.getLogger(className);
 
 	private TAFSCatalog		myCat = new TAFSCatalog();
+
+	private static Integer	threadLimit = 10;	// Default
+	public static Semaphore	activeThreads = null;
+	public static Semaphore	maxThreads = null;
 
 	public TAFSCacheCoordinator() throws FileNotFoundException, IOException, InterruptedException
 	{
@@ -35,16 +38,24 @@ public class TAFSCacheCoordinator
 	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException
 	{
 		TAFSGlobalConfig.LoadConfigFromFile();
+//		TAFSGlobalConfig.SetLoggingLevel(className);
+		TAFSGlobalConfig.SetLoggingLevel(TAFSGlobalConfig.getLevel(TAFSOptions.ccLogLevel));
+//		log.setLevel(TAFSGlobalConfig.getLevel(TAFSOptions.ccLogLevel));
 		new TAFSCacheCoordinator();
 	}
 
 	public void RunCC() throws FileNotFoundException, IOException, InterruptedException
 	{
 		long			tempCounter = 0;
-		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort));
+		long			maxThreadCount = 0;
+		TAFSCommHandler	aCommHandler = new TAFSCommHandler(TAFSGlobalConfig.getString(TAFSOptions.ccBindAddr), TAFSGlobalConfig.getInteger(TAFSOptions.ccListenPort));
 		TAFSCommHandler	threadCH;
 
 		log.info("Entered " + className);
+
+		threadLimit = TAFSGlobalConfig.getInteger(TAFSOptions.ccThreadLimit);
+		maxThreads = new Semaphore(threadLimit);
+		activeThreads = new Semaphore(0);
 
 		// Load the catalog from disk.
 		String	catFile = TAFSGlobalConfig.getString(TAFSOptions.catalogFile);
@@ -67,8 +78,9 @@ public class TAFSCacheCoordinator
 			if (log.isLoggable(Level.INFO))
 			{
 				String	logMsg = className + "(" + tempCounter + "): ";
-						logMsg += "Host is " + InetAddress.getLocalHost().getHostAddress();
-						logMsg += ":" + aCommHandler.GetPort() + ".  Waiting for message...";
+//						logMsg += "Host is " + InetAddress.getLocalHost().getHostAddress();
+						logMsg += "Host is " + aCommHandler.GetLocalIP();
+						logMsg += ":" + aCommHandler.GetPort() + ".  Waiting for message...\n\tThreads active, max = " + activeThreads.availablePermits() + ", " + maxThreadCount;
 
 				log.info(logMsg);
 			}
@@ -78,6 +90,11 @@ public class TAFSCacheCoordinator
 			// Spin off thread to handle message
 			log.info(className + ": Received message, executing thread.");
 
+			// Increment activeThread count
+			activeThreads.release();
+//			maxThreads.acquire();
+			if (activeThreads.availablePermits() > maxThreadCount)
+				maxThreadCount = activeThreads.availablePermits();
 			new TAFSCCThread(threadCH, myCat, "Thread #" + tempCounter);
 
 			// Pause for a second before continuing
