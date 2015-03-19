@@ -51,6 +51,7 @@ public class TAFSCHThread implements Runnable
 			}
 			catch(IOException eIO)
 			{
+				log.warning("Exception while caching file: " + eIO.getMessage());
 //				outMsg.myMsg = TAFSCommands.notok.getCmdStr();
 //				outMsg.myArgs.add("IOException: " + eIO.getMessage());
 			}
@@ -202,7 +203,6 @@ public class TAFSCHThread implements Runnable
 		TAFSFile	theFile;
 		Boolean		useCache = true;
 
-		// Find the file in the catalog.
 		fileName = inMsg.myArgs.get(0);
 		log.fine("GetFile called, file name = '" + fileName + "'");
 

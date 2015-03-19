@@ -276,7 +276,7 @@ public class TestTAFSClient
 			threadControl.acquire();
 			// Increment running thread semaphore
 			threadCompletion.release();
-			new TestTAFSClient().new GetOrPutFile(/*parentDir + newFileName, newFileName,*/ filesPerThread, x * filesPerThread, inUseCache).SetGet(inIsGet);
+			new TestTAFSClient().new GetOrPutFile(inIsGet, /*parentDir + newFileName, newFileName,*/ filesPerThread, x * filesPerThread, inUseCache);
 			endTime = System.nanoTime();
 			elapsedTime += endTime - startTime;
 		}
@@ -287,7 +287,7 @@ public class TestTAFSClient
 			threadControl.acquire();
 			// Increment running thread semaphore
 			threadCompletion.release();
-			new TestTAFSClient().new GetOrPutFile(/*parentDir + newFileName, newFileName,*/ finalCount, threadLimit * filesPerThread, inUseCache).SetGet(inIsGet);
+			new TestTAFSClient().new GetOrPutFile(inIsGet, /*parentDir + newFileName, newFileName,*/ finalCount, threadLimit * filesPerThread, inUseCache);
 			endTime = System.nanoTime();
 			elapsedTime += endTime - startTime;
 		}
@@ -308,21 +308,22 @@ public class TestTAFSClient
 		private Boolean	useCache;
 		private Integer	fileCount;
 		private Integer	startFile;
-		private Boolean	isGet = false;
+		private Boolean	isGet;
 
-		public GetOrPutFile(Integer inFileCount, Integer inStartFile, Boolean inUseCache)
+		public GetOrPutFile(Boolean inIsGet, Integer inFileCount, Integer inStartFile, Boolean inUseCache)
 		{
 			fileCount = inFileCount;
 			startFile = inStartFile;
 			useCache = inUseCache;
+			isGet = inIsGet;
 
 			new Thread(this).start();
 		}
 
-		public void SetGet(Boolean inGet)
-		{
-			isGet = inGet;
-		}
+//		public void SetGet(Boolean inGet)
+//		{
+//			isGet = inGet;
+//		}
 
 		@Override
 		public void run()
