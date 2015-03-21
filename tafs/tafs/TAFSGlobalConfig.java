@@ -154,7 +154,10 @@ public class TAFSGlobalConfig
 				// Ignore lines that do not have two strings separated by white space.
 				oneLineParts = oneLine.split("\\s+");
 				if (oneLineParts.length != 2)
+				{
+					log.warning("Skipping line: " + oneLine);
 					continue;
+				}
 
 				optionName = oneLineParts[0];
 				optionValue = oneLineParts[1];
